@@ -73,8 +73,8 @@ typedef BridgeShutdownDart = void Function(int handle);
 typedef BridgeIsReadyNative = Int32 Function(BridgeHandle handle);
 typedef BridgeIsReadyDart = int Function(int handle);
 
-typedef BridgeGetLastErrorNative = Pointer<Utf8> Function(BridgeHandle handle);
-typedef BridgeGetLastErrorDart = Pointer<Utf8> Function(int handle);
+typedef BridgeGetLastErrorNative = Int32 Function(BridgeHandle handle, Pointer<Utf8> out, Int32 size);
+typedef BridgeGetLastErrorDart = int Function(int handle, Pointer<Utf8> out, int size);
 
 typedef BridgeUpdateCameraNative = Int32 Function(
   BridgeHandle handle, Pointer<BridgeCamera> camera,

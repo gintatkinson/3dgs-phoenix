@@ -53,11 +53,14 @@ int32_t bridge_is_ready(bridge_handle_t handle) {
   return g_states.count(handle) ? 1 : 0;
 }
 
-const char* bridge_get_last_error(bridge_handle_t handle) {
+int32_t bridge_get_last_error(bridge_handle_t handle, char* out, int32_t size) {
+  if (!out || size <= 0) return BRIDGE_ERR_MEMORY;
   std::lock_guard<std::mutex> lock(g_statesMutex);
   auto it = g_states.find(handle);
-  if (it == g_states.end()) return "Invalid handle";
-  return it->second->lastError.c_str();
+  const char* src = (it == g_states.end()) ? "Invalid handle" : it->second->lastError.c_str();
+  std::strncpy(out, src, static_cast<size_t>(size) - 1);
+  out[size - 1] = '\0';
+  return BRIDGE_OK;
 }
 
 int32_t bridge_update_camera(bridge_handle_t handle, const bridge_camera_t* camera) {

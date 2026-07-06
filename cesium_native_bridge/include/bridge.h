@@ -52,7 +52,7 @@ void bridge_shutdown(bridge_handle_t handle);
 
 int32_t bridge_is_ready(bridge_handle_t handle);
 
-const char* bridge_get_last_error(bridge_handle_t handle);
+int32_t bridge_get_last_error(bridge_handle_t handle, char* out, int32_t size);
 
 /* --- Camera --- */
 int32_t bridge_update_camera(bridge_handle_t handle, const bridge_camera_t* camera);
