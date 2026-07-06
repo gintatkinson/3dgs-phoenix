@@ -142,9 +142,7 @@ void main() {
     tester.binding.setSurfaceSize(const Size(1000, 800));
 
     await app_main.main();
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 15));
     int attempts = 0;
     while (attempts < 20 && find.byKey(Key('node_${allNodeIds.first}')).evaluate().isEmpty) {
       await tester.pump(const Duration(milliseconds: 500));
@@ -157,8 +155,7 @@ void main() {
 
         await tester.ensureVisible(find.byKey(Key('node_$nodeId')));
         await tester.tap(find.byKey(Key('node_$nodeId')));
-        await tester.pump();
-        await tester.pump();
+        await tester.pumpAndSettle();
 
         await _editTextFields(tester, [
           'Node-$nodeIdx-$cycle',
@@ -167,11 +164,7 @@ void main() {
       }
     }
 
-    // Drain pending async saves before teardown
-    for (int i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 200));
-    }
-    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
   testWidgets('Stress test: cycle theme + text size between each full 20-node pass',
@@ -182,9 +175,7 @@ void main() {
     tester.binding.setSurfaceSize(const Size(1000, 800));
 
     await app_main.main();
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 15));
     int attempts = 0;
     while (attempts < 20 && find.byKey(Key('node_${allNodeIds.first}')).evaluate().isEmpty) {
       await tester.pump(const Duration(milliseconds: 500));
@@ -234,8 +225,7 @@ void main() {
             crashAction = 'tap';
             await tester.ensureVisible(find.byKey(Key('node_$nodeId')));
             await tester.tap(find.byKey(Key('node_$nodeId')));
-            await tester.pump();
-            await tester.pump();
+            await tester.pumpAndSettle();
 
             crashAction = 'edit_fields';
             await _editTextFields(tester, [
@@ -267,7 +257,6 @@ void main() {
 
         SchedulerBinding.instance.removeTimingsCallback(timingsCallback);
 
-        // VM Service connection and GC + heap analysis
         VmService? vmService;
         try {
           vmService = await _connectToVmService();
@@ -281,13 +270,17 @@ void main() {
         bool leakDetected = false;
         String leakDetails = '';
         if (vmService != null) {
-          final treeVmCount = await _countInstances(vmService, 'TreeViewModel');
-          final propVmCount = await _countInstances(vmService, 'PropertiesViewModel');
-          final tablesVmCount = await _countInstances(vmService, 'TablesViewModel');
-          
-          if (treeVmCount > 1 || propVmCount > 1 || tablesVmCount > 1) {
-            leakDetected = true;
-            leakDetails = 'Leaks: TreeViewModel ($treeVmCount), PropertiesViewModel ($propVmCount), TablesViewModel ($tablesVmCount)';
+          try {
+            final treeVmCount = await _countInstances(vmService, 'TreeViewModel');
+            final propVmCount = await _countInstances(vmService, 'PropertiesViewModel');
+            final tablesVmCount = await _countInstances(vmService, 'TablesViewModel');
+            
+            if (treeVmCount > 1 || propVmCount > 1 || tablesVmCount > 1) {
+              leakDetected = true;
+              leakDetails = 'Leaks: TreeViewModel ($treeVmCount), PropertiesViewModel ($propVmCount), TablesViewModel ($tablesVmCount)';
+            }
+          } finally {
+            vmService.dispose();
           }
         }
 
@@ -362,9 +355,7 @@ void main() {
 
         passCount++;
 
-        for (int i = 0; i < 10; i++) {
-          await tester.pump(const Duration(milliseconds: 100));
-        }
+        await tester.pumpAndSettle(const Duration(seconds: 1));
       }
     });
   });

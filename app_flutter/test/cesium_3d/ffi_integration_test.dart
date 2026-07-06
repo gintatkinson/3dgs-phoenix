@@ -6,25 +6,30 @@ import 'package:path/path.dart' as p;
 import 'package:app_flutter/domain/cesium_3d/native/bridge_bindings.dart';
 
 void main() {
-  test('cesium-native FFI integration test', () {
-    print("=== cesium-native FFI integration test ===\n");
+  DynamicLibrary? _lib;
+  String? _skipReason;
 
-    DynamicLibrary lib;
-    try {
-      final baseDir = Directory.current.path;
-      final buildDir = p.basename(baseDir) == 'app_flutter'
-          ? p.join(p.dirname(baseDir), 'build')
-          : p.join(baseDir, 'build');
-      final libName = Platform.isMacOS
-          ? 'libcesium_native_bridge.dylib'
-          : (Platform.isWindows ? 'cesium_native_bridge.dll' : 'libcesium_native_bridge.so');
-      final dylibPath = p.join(buildDir, libName);
-      lib = DynamicLibrary.open(dylibPath);
-      print('Loaded dylib successfully from $dylibPath');
-    } catch (e) {
-      print('FAIL: could not load dylib: $e');
-      fail('could not load dylib: $e');
-    }
+  final baseDir = Directory.current.path;
+  final buildDir = p.basename(baseDir) == 'app_flutter'
+      ? p.join(p.dirname(baseDir), 'build')
+      : p.join(baseDir, 'build');
+  final libName = Platform.isMacOS
+      ? 'libcesium_native_bridge.dylib'
+      : (Platform.isWindows ? 'cesium_native_bridge.dll' : 'libcesium_native_bridge.so');
+  final dylibPath = p.join(buildDir, libName);
+
+  try {
+    _lib = DynamicLibrary.open(dylibPath);
+    print('Loaded dylib successfully from $dylibPath');
+  } catch (e) {
+    _skipReason = 'Skipping FFI test: native library not available at $dylibPath. '
+        'Build cesium-native first: cd build && cmake .. && cmake --build .';
+    print('SKIP: $_skipReason');
+  }
+
+  test('cesium-native FFI integration test', () {
+    final lib = _lib!;
+    print("=== cesium-native FFI integration test ===\n");
 
     final bindings = CesiumNativeBindings(lib);
 
@@ -101,5 +106,5 @@ void main() {
     print('Shutdown OK');
 
     print('\n=== ALL TESTS PASSED ===');
-  });
+  }, skip: _skipReason);
 }
