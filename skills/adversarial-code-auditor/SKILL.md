@@ -2,128 +2,105 @@
 
 ---
 name: adversarial-code-auditor
-description: "Pre-emptive adversarial audit of existing code against four correctness risk pillars: memory safety, resource lifecycle, concurrency correctness, and test integrity."
+version: "3.1"
+description: "Pre-emptive adversarial audit against four correctness risk pillars."
 compatibility: "Requires gh CLI and git."
 metadata:
-  title: "Adversarial Code Auditor (Correctness Risk Pillars)"
+  title: "Adversarial Code Auditor"
   category: auditing
   risk: low
-  source: custom
-  version: "3.0"
 ---
 
 # Adversarial Code Auditor
 
-## Architecture
+## 1. Reference
 
-The coordinator dispatches subagents. Each subagent independently reads this skill file, audits one file, applies all rules from this document, and files its own findings via `gh issue create --body-file`. The coordinator only collects URLs. No coordinator prompt variation. Every subagent receives identical dispatch format.
+### 1.1 Architecture
 
-```
-Coordinator
-  |
-  +-> Subagent 1  ->  reads SKILL.md → audits file → files issues → returns URLs
-  +-> Subagent 2  ->  reads SKILL.md → audits file → files issues → returns URLs
-  +-> Subagent N  ->  reads SKILL.md → audits file → files issues → returns URLs
-```
+Subagent receives: file path, pillar name, mode, repo name. Subagent reads this file, audits the target file, produces compliant output, self-verifies, files via `gh issue create --body-file`, returns URLs. Coordinator collects URLs. Coordinator never touches body text.
 
-## When to Invoke
+### 1.2 When to Use
 
-- 5+ open bugs in related source files form a correctness cluster
-- User provides explicit file paths for a clean-slate audit
-- NOT for single runtime bugs (use debug-protocol)
-- NOT for spec-to-code gaps (use spec-implementation-auditor)
+5+ open bugs in related files form a cluster. User provides file paths. Single runtime bugs → debug-protocol. Spec gaps → spec-implementation-auditor.
 
-## The Four Risk Pillars
+### 1.3 Pillars
 
-### 1. Memory Safety (FFI / Native Bridge)
-Double-free, UAF, dangling pointers, buffer overflow, signed/unsigned wrap, C++ exception propagation across FFI, NativeFinalizer correctness, mutex/pointer lifetime.
+| Pillar | Focus |
+|--------|-------|
+| Memory Safety | UAF, double-free, dangling pointers, buffer overflow, signed/unsigned wrap, C++ exception across FFI, NativeFinalizer, mutex/pointer lifetime |
+| Resource Lifecycle | Missing dispose(), cache eviction, sync I/O on UI thread, GC churn, socket leaks, HTTP timeouts, GPU overdraw |
+| Concurrency | ChangeNotifier post-disposal, async races, state mutation in build(), re-entrant async, missing _disposed, TOCTOU |
+| Test Integrity | FFI/DB-dependent tests, sleep loops, bare assert(), missing testWidgets, duplicated fakes, flaky assertions |
 
-### 2. Resource Lifecycle (GPU / Image / Memory)
-Missing dispose(), cache eviction correctness, sync I/O on UI thread, GC churn, socket leaks, HTTP timeouts, GPU overdraw.
+### 1.4 Severity
 
-### 3. Concurrency Correctness (Async Races / ViewModel State)
-ChangeNotifier post-disposal, async type-loading races, state mutation in build(), re-entrant async, missing _disposed guards, TOCTOU, isolate lifecycles.
-
-### 4. Test Integrity (Isolation / Reliability)
-FFI/DB-dependent tests, sleep/delayed loops, bare assert(), missing testWidgets, duplicated fakes, flaky assertions.
-
-## Severity Calibration
-
-| Severity | Criteria |
-|----------|----------|
-| **Critical** | Crashes/leaks from **current code paths**. Reachable from existing callers. |
-| **Important** | Wrong behavior, degrades under load, correctness risk in edge cases. |
-| **Suggestion** | Forward-looking risk, missing guard, test gap, dead code. Not a bug in current paths. |
+| Severity | Rule |
+|----------|------|
+| **Critical** | Crash, corruption, or resource leak from code paths reachable by current callers. |
+| **Important** | Wrong behavior, degradation under load, correctness risk in edge cases. |
+| **Suggestion** | Forward-looking risk, missing guard for future code, test gap, dead code. NOT a current bug. |
 | **Nitpick** | Style, naming. No correctness impact. |
 
-**Hard rules:**
-- "No validation" is false if ANY guard exists. Read code before claiming absence.
-- Stub functions that cannot throw have no exception risk. Do not flag.
-- Forward-looking = Suggestion, not Critical.
+**Constraints:** "No validation" is false if any guard exists. Read code before claiming absence. Stubs that cannot throw have no exception risk. Forward-looking = Suggestion.
 
-## UML Diagram Requirements
+### 1.5 UML
 
-Critical and Important findings require a Mermaid UML diagram in Section 4.
+Critical and Important findings require a Mermaid diagram in Section 4. Select type:
 
-| Pillar | Defect Pattern | Diagram Type |
-|--------|---------------|--------------|
-| Memory Safety | UAF / double-free / dangling pointer | sequenceDiagram |
-| Memory Safety | Exception crossing FFI | sequenceDiagram |
-| Memory Safety | Buffer overflow / signed wrap | classDiagram |
-| Resource Lifecycle | Missing dispose / leak | sequenceDiagram |
-| Resource Lifecycle | Cache eviction / LRU violation | stateDiagram-v2 |
-| Concurrency | ChangeNotifier post-disposal | sequenceDiagram |
-| Concurrency | TOCTOU / async race | sequenceDiagram |
-| Test Integrity | FFI-dependent test / missing mock | classDiagram |
+| Defect | Diagram |
+|--------|---------|
+| UAF, double-free, dangling pointer | sequenceDiagram |
+| Exception crossing FFI | sequenceDiagram |
+| Buffer overflow, signed wrap | classDiagram |
+| Missing dispose, leak on error path | sequenceDiagram |
+| Cache eviction, LRU violation | stateDiagram-v2 |
+| ChangeNotifier post-disposal | sequenceDiagram |
+| TOCTOU, async race | sequenceDiagram |
+| FFI-dependent test, missing mock | classDiagram |
 
-**UML rules:**
-- Sequence diagrams: named lifelines, `alt`/`loop` fragments for branches
-- Class diagrams: show relationships, no isolated classes
-- State diagrams: `stateDiagram-v2` syntax, transition labels
-- Must use ````mermaid` ... ```` fenced blocks. No ASCII art.
-- Must trace to file:line references from Section 3.
+Must use ```mermaid fenced blocks with valid syntax. No ASCII art. Named lifelines. alt/loop fragments for branches. No isolated classes. stateDiagram-v2 syntax. Trace to file:line from Section 3.
 
----
+## 2. Output Format
 
-## Issue Body Template
-
-Every finding MUST use this exact structure. All 7 sections are mandatory. No variation.
+Every finding MUST produce output matching this skeleton character-for-character in section headers and field labels. Replace `[...]` placeholders with real content. Do not change the structure.
 
 ```
 ## 1. Context and References
-- **File**: `path/to/file.ext:line-line`
+- **File**: `[path]:[line-line]`
 - **Pillar**: [Memory Safety | Resource Lifecycle | Concurrency | Test Integrity]
-- **Symptom**: [Observable failure caused by this defect]
+- **Symptom**: [description]
 
 ## 2. Root Cause Analysis (5 Whys)
 1. **Why [symptom]?** Because [reason].
-2. **Why [reason]?** Because [deeper reason].
-3. **Why [deeper reason]?** Because [yet deeper].
-4. **Why [yet deeper]?** Because [design/architectural cause].
-5. **Why [design cause]?** Because [root systemic cause].
+2. **Why [reason]?** Because [deeper].
+3. **Why [deeper]?** Because [deeper still].
+4. **Why [deeper still]?** Because [design cause].
+5. **Why [design cause]?** Because [root cause].
 
 ## 3. Correctness Analysis
-[Trace the data flow from trigger to failure. Identify the invariant being violated. Reference exact source code lines. Explain the failure mode in concrete terms.]
+[Trace data flow from trigger to failure. Name the invariant violated. Cite file:line references.]
 
 ## 4. UML Diagrams
-[MANDATORY for Critical & Important. Omit for Suggestion/Nitpick — write "N/A — Suggestion severity."]
+[MANDATORY for Critical/Important. For Suggestion/Nitpick: "N/A — [severity] severity."]
 
 ```mermaid
 sequenceDiagram
-    participant A as [Name]
-    participant B as [Name]
+    participant A as [name]
+    participant B as [name]
     A->>B: [action]
     Note over B: [defect mechanics]
     B-->>A: [failure]
 ```
 
-[Fill in real participant names, messages, annotations, and notes. This is a skeleton — replace all bracketed text. Valid mermaid syntax required.]
+[Fill real names. This is mermaid syntax inside a fenced block. No ASCII art.]
 
 ## 5. Affected Callers / Downstream Impact
-- [Caller path or reference] — [how it triggers or is affected by this defect]
+- [caller] — [how affected]
 
 ## 6. Proposed Correction
-[Code snippet showing the fix. Use proper syntax highlighting with language tag.]
+```[lang]
+[code]
+```
 
 ## 7. Relationship to Existing Issues
 - **Discovered in audit** — new finding.
@@ -132,92 +109,144 @@ sequenceDiagram
 Adversarial [Pillar] Audit
 
 SEVERITY: [Critical | Important | Suggestion | Nitpick]
-FILE_LOCATION: [path/to/file.ext:line-line]
+FILE_LOCATION: [path]:[line-line]
 ```
 
----
+## 3. Protocol
 
-## Subagent Execution Protocol
+Subagents follow these steps in order. No deviation.
 
-This section is the only instruction subagents follow. Every subagent receives the same protocol. The coordinator dispatch differs only by `[FILE_PATH]`, `[PILLAR]`, and `[MODE]`.
+### Step A — Read
 
-### Pre-audit — Read before starting
+1. Read this skill file in full.
+2. Read `[FILE_PATH]`.
+3. Read `.pipeline/constitution.md`.
+4. For Dart files, read `.pipeline/profiles/flutter.md`.
 
-1. Read the source file at `[FILE_PATH]`.
-2. Read the project constitution at `.pipeline/constitution.md`.
-3. For Dart files: read `.pipeline/profiles/flutter.md`.
-4. For C++ files: `extern "C"` functions must not throw. Use `snake_case`.
+### Step B — Audit
 
-### Audit — Find defects through the pillar lens
+1. Scan every line of `[FILE_PATH]` through the `[PILLAR]` focus.
+2. For each potential defect, answer:
+   - What exact `file:line` range contains the defect?
+   - Is it reachable from current callers? (Critical) or future-only? (Suggestion)
+   - Does the code already have a guard? If yes, acknowledge it.
+   - Is it a stub that cannot throw or allocate? If yes, do not flag.
+3. Classify severity using Section 1.4.
+4. If Critical or Important, select diagram type from Section 1.5.
 
-1. Read every line of the source file.
-2. Apply the `[PILLAR]` focus areas (see "The Four Risk Pillars" above).
-3. For every potential defect:
-   - Verify it against the source code. Cite exact file:line.
-   - Classify severity using the Severity Calibration table.
-   - If the code has a guard (try/catch, NaN check, null check), acknowledge it. Do not claim absence.
-   - If a stub function cannot throw, do not flag exception risk.
-   - If it requires future code changes to trigger, it is Suggestion.
-   - If it is Critical or Important, select the UML diagram type from the UML Requirements table.
+### Step C — Write
 
-### Output — Produce the issue body
+1. For EVERY finding, produce one issue body.
+2. Copy the skeleton from Section 2 exactly. Fill in `[...]` placeholders with real values.
+3. Section headers and field labels must match the skeleton character-for-character.
+4. Section 1: Three bullet points with bold labels. Never collapse into one line.
+5. Section 2: Exactly five `**Why [text]?** Because [text].` lines.
+6. Section 4: Valid ```mermaid block (Critical/Important) or "N/A — [severity] severity." (Suggestion/Nitpick). No ASCII art.
+7. Section 6: Triple-backtick code block with language tag.
+8. End with SEVERITY and FILE_LOCATION lines.
 
-1. For EVERY finding, produce one issue body using the Issue Body Template exactly as specified above. All 7 sections mandatory. Section headers and field labels must match the template character-for-character.
-2. Section 1: Use bullet format with bold field labels. Do not collapse into a single line.
-3. Section 2: Exactly 5 Why statements, each beginning with `**Why [text]?** Because [text].`
-4. Section 3: Trace the data flow. Cite source lines.
-5. Section 4: Critical/Important must have a valid mermaid diagram inside ```mermaid fenced block. Suggestion/Nitpick write "N/A — Suggestion severity."
-6. Section 6: Code blocks must use language tags (```cpp, ```dart, etc.).
-7. End with SEVERITY and FILE_LOCATION lines.
+### Step D — Verify
 
-### File — Create the GitHub issue
+Before filing, run these checks on the body. All must pass.
 
-1. Write the complete body verbatim to `/tmp/gh_body.md`.
-2. Run:
-   ```bash
-   gh issue create --repo gintatkinson/3dgs-phoenix --title "[AUDIT] [filename]: [finding]" --label "bug" --body-file /tmp/gh_body.md
-   ```
-3. Title format: `[AUDIT] [filename.ext]: [Brief finding description]`
-4. For `[MODE] = bug-based` only: if finding confirms known issue, use `gh issue comment` instead.
-5. Sleep 1 second between each issue create.
-6. Return the list of created issue URLs with severities. Do NOT return the issue bodies to the coordinator.
+| # | Check | How to verify |
+|---|-------|---------------|
+| 1 | Section headers | Count `^## [1-7]\.` must equal 7 |
+| 2 | Audit Source line | Contains `## Audit Source` |
+| 3 | Severity line | Matches `SEVERITY: (Critical|Important|Suggestion|Nitpick)` |
+| 4 | File location line | Matches `FILE_LOCATION: [path]:[line]` |
+| 5 | Section 1 bullets | Three lines matching `^- \*\*(File|Pillar|Symptom)\*\*:` |
+| 6 | Section 2 Whys | Five lines matching `^[1-5]\. \*\*Why .*\?\*\* Because .*` |
+| 7 | Section 4 Critical/Important | Contains ```mermaid block with valid diagram |
+| 8 | Section 4 Suggestion/Nitpick | Contains `N/A — ` |
+| 9 | Balanced code blocks | Even number of ``` occurrences |
+| 10 | No ASCII art UML | Does NOT contain unescaped `->>` or `→` outside mermaid blocks |
+| 11 | Title-format | Matches `\[AUDIT\] \[[file.ext]\]: [description]` |
 
-### Quality — Self-verify before filing
+If any check fails, fix the body and re-verify. Do NOT file until all checks pass.
 
-Before running `gh issue create`, verify:
-- [ ] All 7 section headers present (## 1. through ## 7.)
-- [ ] Section 1 uses bullet format with `- **File**:`, `- **Pillar**:`, `- **Symptom**:`
-- [ ] Section 2 has exactly 5 `**Why [text]?** Because [text].` statements
-- [ ] Section 4 has ```mermaid block with valid diagram (Critical/Important) or "N/A — Suggestion severity." (Suggestion/Nitpick)
-- [ ] SEVERITY: line present with one of Critical, Important, Suggestion, Nitpick
-- [ ] FILE_LOCATION: line present with `path:line-line`
-- [ ] No broken code blocks (all ``` are paired)
-- [ ] No ASCII art UML — must use ```mermaid fences
+### Step E — File
 
----
+1. Write the verified body to `/tmp/gh_body.md`.
+2. Run: `gh issue create --repo [REPO] --title "[AUDIT] [file.ext]: [description]" --label "bug" --body-file /tmp/gh_body.md`
+3. Title format: `[AUDIT] [filename.ext]: [Brief description]`
+4. If mode is `bug-based` and finding confirms a known issue, use `gh issue comment` instead of `gh issue create`.
+5. Sleep 1 second between issues.
+6. Return: issue URLs with severities.
 
-## Coordinator Dispatch Template
-
-The ONLY variation between subagents is `[FILE_PATH]`, `[PILLAR]`, and `[MODE]`. Every subagent receives this exact dispatch with those three fields filled in:
+## 4. Example — Complete Compliant Output
 
 ```
-Execute the adversarial-code-auditor skill.
+## 1. Context and References
+- **File**: `cesium_native_bridge/src/bridge.cpp:56-61`
+- **Pillar**: Memory Safety
+- **Symptom**: Dart FFI caller reads garbage or crashes after calling bridge_get_last_error when another thread concurrently calls bridge_shutdown on the same handle.
 
-1. Read this file in full: skills/adversarial-code-auditor/SKILL.md
-2. Follow the "Subagent Execution Protocol" section exactly.
+## 2. Root Cause Analysis (5 Whys)
+1. **Why does the Dart VM crash?** Because it dereferences a pointer whose backing memory was freed.
+2. **Why was the memory freed?** Because bridge_get_last_error returns c_str() and releases the mutex; a concurrent bridge_shutdown erases the BridgeState, destroying the std::string.
+3. **Why return a raw pointer to internal state?** Because the API was designed for zero-copy convenience.
+4. **Why is that assumption violated?** Because no ownership protocol or lifetime contract exists across the FFI boundary.
+5. **Why was no contract designed?** Because the C FFI pattern chose raw C string returns without ownership semantics.
 
-PARAMETERS:
+## 3. Correctness Analysis
+Thread T1 calls bridge_get_last_error (line 56), acquires g_statesMutex (line 57), evaluates c_str() on line 60 producing pointer p. The lock_guard destructor at line 61 releases the mutex. Thread T2 enters bridge_shutdown (line 46), acquires the mutex (line 47), erases the map entry (line 48). The unique_ptr destructor frees BridgeState, ~std::string() deallocates the buffer backing p. T1 dereferences p — use-after-free. Invariant violated: pointer returned across FFI must remain valid at least until the next bridge call.
+
+## 4. UML Diagrams
+```mermaid
+sequenceDiagram
+    participant T1 as Dart Thread T1
+    participant Bridge as bridge_get_last_error
+    participant T2 as Dart Thread T2
+    T1->>Bridge: get_last_error(handle)
+    Bridge-->>T1: return c_str() pointer p
+    Note over T1: p is dangling after T2 acts
+    T2->>Bridge: shutdown(handle)
+    Bridge->>Bridge: erase BridgeState → ~std::string()
+    T1->>T1: read *p → USE-AFTER-FREE
+```
+
+## 5. Affected Callers / Downstream Impact
+- Dart FFI caller getLastError() — receives dangling pointer after concurrent shutdown
+- Any async error-handling path calling getLastError after tile load failure
+
+## 6. Proposed Correction
+```cpp
+int32_t bridge_get_last_error(bridge_handle_t handle, char* out, int32_t size) {
+  if (!out || size <= 0) return BRIDGE_ERR_MEMORY;
+  std::lock_guard<std::mutex> lock(g_statesMutex);
+  auto it = g_states.find(handle);
+  const char* src = (it == g_states.end()) ? "Invalid handle" : it->second->lastError.c_str();
+  std::strncpy(out, src, static_cast<size_t>(size) - 1);
+  out[size - 1] = '\0';
+  return BRIDGE_OK;
+}
+```
+
+## 7. Relationship to Existing Issues
+- **Discovered in audit** — new finding.
+
+## Audit Source
+Adversarial Memory Safety Audit
+
+SEVERITY: Critical
+FILE_LOCATION: cesium_native_bridge/src/bridge.cpp:56-61
+```
+
+## 5. Coordinator Dispatch
+
+The ONLY text sent to each subagent. Only the three bracketed fields differ.
+
+```
+Execute adversarial-code-auditor skill.
+
+Read skills/adversarial-code-auditor/SKILL.md in full.
+Follow the Protocol (Section 3) exactly — Read, Audit, Write, Verify, File.
+
 FILE_PATH: [FILE_PATH]
 PILLAR: [PILLAR]
 MODE: [MODE]
+REPO: [REPO]
 
-Proceed through Pre-audit → Audit → Output → File → return URLs. PROCEED
+Return issue URLs with severities. PROCEED
 ```
-
-## Persistence Rules
-
-- Each file audit uses a fresh subagent. Do not reuse contexts.
-- One pillar at a time for signal clarity.
-- Subagents file their own issues. Coordinator only collects URLs.
-- The coordinator NEVER writes, edits, or extracts issue body text.
-- The dispatch template is immutable. Only `[FILE_PATH]`, `[PILLAR]`, `[MODE]` change.
