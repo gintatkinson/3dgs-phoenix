@@ -63,7 +63,7 @@ class SqliteDataSource implements DataSource {
         (relsByType[tn] ??= []).add(row);
       }
 
-      return typeRows.map((typeRow) {
+      final types = typeRows.map((typeRow) {
         final typeName = typeRow['type_name'] as String;
         final attrRows = attrsByType[typeName] ?? [];
         final relRows = relsByType[typeName] ?? [];
@@ -385,92 +385,96 @@ class SqliteDataSource implements DataSource {
   Future<TopologyData> fetchTopologyData() async {
     try {
       final rows = await _db.query('properties');
-      final List<TopologyNode> nodes = [];
-      final List<TopologyLink> links = [];
-
-      for (final r in rows) {
-        final nodeId = r['node_id'] as String;
-        final dataJson = r['data_json'] as String?;
-        if (dataJson == null || dataJson.isEmpty || dataJson == '{}') continue;
-
-        final decoded = Map<String, dynamic>.from(jsonDecode(dataJson) as Map);
-        
-        // Geolocation is stored under ietfGeoLocation or position
-        final geo = decoded['ietfGeoLocation'] ?? decoded['location'] ?? decoded['position'];
-        if (geo == null) continue;
-
-        double? latVal;
-        double? lngVal;
-        double? altVal;
-
-        if (geo is Map) {
-          final loc = geo['location'] ?? geo;
-          if (loc is Map) {
-            final ellip = loc['ellipsoid'] ?? loc;
-            if (ellip is Map) {
-              latVal = double.tryParse(ellip['latitude']?.toString() ?? '');
-              lngVal = double.tryParse(ellip['longitude']?.toString() ?? '');
-              altVal = double.tryParse(ellip['height']?.toString() ?? ellip['altitude']?.toString() ?? '');
-            }
-          }
-        }
-
-        if (latVal == null || lngVal == null) {
-          continue;
-        }
-
-        nodes.add(TopologyNode(
-          id: nodeId,
-          label: decoded['name']?.toString() ?? nodeId,
-          position: TopologyNodePosition(
-            dim0: lngVal,
-            dim1: latVal,
-            dim2: altVal ?? 0.0,
-            timeIndex: 0,
-            vector: const [],
-          ),
-          status: decoded['status']?.toString() ?? 'Active',
-          rawProperties: decoded,
-        ));
-      }
-
-      // Query the instances table for all interface records to parse connection links
       final interfaceRows = await _db.query(
         'instances',
         where: "type_name = 'interface'",
       );
-      final regExp = RegExp(r'link to node\s+([\w\-]+)');
-      for (final row in interfaceRows) {
-        final parentNodeId = row['parent_node_id'] as String;
-        final dataJson = row['data_json'] as String?;
-        if (dataJson == null || dataJson.isEmpty || dataJson == '{}') continue;
-
-        try {
-          final decoded = Map<String, dynamic>.from(jsonDecode(dataJson) as Map);
-          final description = decoded['description']?.toString();
-          if (description != null) {
-            final match = regExp.firstMatch(description);
-            if (match != null) {
-              final targetNodeId = match.group(1)!;
-              links.add(TopologyLink(
-                source: parentNodeId,
-                target: targetNodeId,
-                type: 'interface',
-              ));
-            }
-          }
-        } catch (_) {}
-      }
-
-      return TopologyData(
-        coordinateMapping: const {},
-        nodes: nodes,
-        links: links,
-      );
+      return compute(_parseTopologyData, <dynamic>[rows, interfaceRows]);
     } catch (e, stackTrace) {
       debugPrint('Error in fetchTopologyData: $e\n$stackTrace');
       return const TopologyData(coordinateMapping: {}, nodes: [], links: []);
     }
+  }
+
+  static TopologyData _parseTopologyData(List<dynamic> args) {
+    final rows = args[0] as List<Map<String, dynamic>>;
+    final interfaceRows = args[1] as List<Map<String, dynamic>>;
+    final List<TopologyNode> nodes = [];
+    final List<TopologyLink> links = [];
+
+    for (final r in rows) {
+      final nodeId = r['node_id'] as String;
+      final dataJson = r['data_json'] as String?;
+      if (dataJson == null || dataJson.isEmpty || dataJson == '{}') continue;
+
+      final decoded = Map<String, dynamic>.from(jsonDecode(dataJson) as Map);
+
+      final geo = decoded['ietfGeoLocation'] ?? decoded['location'] ?? decoded['position'];
+      if (geo == null) continue;
+
+      double? latVal;
+      double? lngVal;
+      double? altVal;
+
+      if (geo is Map) {
+        final loc = geo['location'] ?? geo;
+        if (loc is Map) {
+          final ellip = loc['ellipsoid'] ?? loc;
+          if (ellip is Map) {
+            latVal = double.tryParse(ellip['latitude']?.toString() ?? '');
+            lngVal = double.tryParse(ellip['longitude']?.toString() ?? '');
+            altVal = double.tryParse(ellip['height']?.toString() ?? ellip['altitude']?.toString() ?? '');
+          }
+        }
+      }
+
+      if (latVal == null || lngVal == null) {
+        continue;
+      }
+
+      nodes.add(TopologyNode(
+        id: nodeId,
+        label: decoded['name']?.toString() ?? nodeId,
+        position: TopologyNodePosition(
+          dim0: lngVal,
+          dim1: latVal,
+          dim2: altVal ?? 0.0,
+          timeIndex: 0,
+          vector: const [],
+        ),
+        status: decoded['status']?.toString() ?? 'Active',
+        rawProperties: decoded,
+      ));
+    }
+
+    final regExp = RegExp(r'link to node\s+([\w\-]+)');
+    for (final row in interfaceRows) {
+      final parentNodeId = row['parent_node_id'] as String;
+      final dataJson = row['data_json'] as String?;
+      if (dataJson == null || dataJson.isEmpty || dataJson == '{}') continue;
+
+      try {
+        final decoded = Map<String, dynamic>.from(jsonDecode(dataJson) as Map);
+        final description = decoded['description']?.toString();
+        if (description != null) {
+          final match = regExp.firstMatch(description);
+          if (match != null) {
+            final targetNodeId = match.group(1)!;
+            links.add(TopologyLink(
+              source: parentNodeId,
+              target: targetNodeId,
+              type: 'interface',
+            ));
+          }
+        }
+      } catch (_) {}
+    }
+
+    return TopologyData(
+      coordinateMapping: const {},
+      nodes: nodes,
+      links: links,
+    );
   }
 }
 
