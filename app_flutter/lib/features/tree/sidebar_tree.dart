@@ -7,25 +7,9 @@ import 'package:app_flutter/core/string_resources.dart';
 import 'package:app_flutter/features/tree/tree_node_widget.dart';
 import 'package:app_flutter/features/tree/view_models/tree_view_model.dart';
 
-/// The sidebar panel displaying a hierarchical tree of discoverable views.
-///
-/// Uses [TreeViewModel] (provided via [Provider]) for data and focus management.
-/// Supports keyboard navigation (arrow keys) via a [Focus] wrapper. The tree
-/// is scrollable vertically. A footer shows the current worker state and a
-/// settings button that opens [SettingsPanel] in a modal bottom sheet.
-///
-/// [contentPadding] controls the padding around the scrollable tree content area.
-///
-/// Edge cases: when [workerResult] is null, displays "Idle"; when the tree
-/// data is empty the panel renders an empty column. The settings icon is
-/// always visible regardless of worker state.
-class SidebarTree extends StatelessWidget {
+class SidebarTree extends StatefulWidget {
   final int? workerResult;
   final ValueChanged<String> onViewSelected;
-  /// The padding around the scrollable tree content area.
-  ///
-  /// Applied to the [SingleChildScrollView] that wraps the tree nodes.
-  /// Defaults to `EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0)`.
   final EdgeInsetsGeometry contentPadding;
 
   const SidebarTree({
@@ -34,6 +18,13 @@ class SidebarTree extends StatelessWidget {
     required this.onViewSelected,
     this.contentPadding = const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
   });
+
+  @override
+  State<SidebarTree> createState() => _SidebarTreeState();
+}
+
+class _SidebarTreeState extends State<SidebarTree> {
+  bool _openingSettings = false;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +43,6 @@ class SidebarTree extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Sidebar Header
           Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
@@ -79,7 +69,6 @@ class SidebarTree extends StatelessWidget {
               ],
             ),
           ),
-          // Focusable Tree Navigation
           Expanded(
             child: Focus(
               focusNode: viewModel.focusNode,
@@ -87,23 +76,25 @@ class SidebarTree extends StatelessWidget {
                 if (event is KeyDownEvent) {
                   final key = event.logicalKey;
                   if (key == LogicalKeyboardKey.arrowDown) {
-                    viewModel.handleArrowDown();
+                    viewModel.moveFocusDown();
                     return KeyEventResult.handled;
-                  } else if (key == LogicalKeyboardKey.arrowUp) {
-                    viewModel.handleArrowUp();
+                  }
+                  if (key == LogicalKeyboardKey.arrowUp) {
+                    viewModel.moveFocusUp();
                     return KeyEventResult.handled;
-                  } else if (key == LogicalKeyboardKey.arrowLeft) {
-                    viewModel.handleArrowLeft();
-                    return KeyEventResult.handled;
-                  } else if (key == LogicalKeyboardKey.arrowRight) {
-                    viewModel.handleArrowRight();
+                  }
+                  if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.space) {
+                    final currentId = viewModel.currentView;
+                    if (currentId != null) {
+                      viewModel.selectView(currentId);
+                    }
                     return KeyEventResult.handled;
                   }
                 }
                 return KeyEventResult.ignored;
               },
-                child: SingleChildScrollView(
-                padding: contentPadding,
+              child: SingleChildScrollView(
+                padding: widget.contentPadding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: treeData.map((node) => TreeNodeWidget(
@@ -113,7 +104,6 @@ class SidebarTree extends StatelessWidget {
               ),
             ),
           ),
-          // Sidebar Footer
           Container(
             padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
@@ -135,7 +125,7 @@ class SidebarTree extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Worker: ${workerResult ?? "Idle"}',
+                    'Worker: ${widget.workerResult ?? "Idle"}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,
@@ -144,12 +134,15 @@ class SidebarTree extends StatelessWidget {
                 IconButton(
                   key: const Key('sidebar_settings_button'),
                   icon: const Icon(Icons.settings, size: 18),
-                  onPressed: () {
+                  onPressed: _openingSettings ? null : () {
+                    setState(() => _openingSettings = true);
                     showModalBottomSheet<void>(
                       context: context,
                       isScrollControlled: true,
                       builder: (context) => const SettingsPanel(),
-                    );
+                    ).whenComplete(() {
+                      if (mounted) setState(() => _openingSettings = false);
+                    });
                   },
                 ),
               ],

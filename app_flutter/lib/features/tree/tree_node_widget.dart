@@ -67,7 +67,7 @@ class TreeNodeWidget extends StatelessWidget {
             color: isSelected ? brandPrimary.withValues(alpha: 0.12) : null,
             child: InkWell(
               key: Key('node_${node.id}'),
-              onTap: () {
+              onTap: isLoading ? null : () {
                 final viewModel = context.read<TreeViewModel>();
                 viewModel.selectView(node.id);
                 viewModel.focusNode.requestFocus();
