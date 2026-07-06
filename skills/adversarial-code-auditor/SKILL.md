@@ -469,7 +469,13 @@ For each finding, produce the complete 7-section ISSUE_BODY using this template.
 
 ## 4. UML Diagrams (MANDATORY for Critical & Important)
 ```mermaid
-[sequenceDiagram | classDiagram | stateDiagram-v2 — see UML Requirements table]
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Target]
+    A->>B: [action]
+    B-->>A: [defect triggered]
+```
+Fill in real participants, messages, and annotations. This MUST be valid mermaid syntax inside the fenced block. ASCII art text diagrams are not mermaid and will not render.
 ```
 
 ## 5. Affected Callers / Downstream Impact
@@ -531,7 +537,13 @@ ISSUE_BODY TEMPLATE:
 
 ## 4. UML Diagrams (MANDATORY for Critical & Important)
 ```mermaid
-[diagram]
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Target]
+    A->>B: [action]
+    B-->>A: [defect triggered]
+```
+Fill in real participants, messages, and annotations. Valid mermaid syntax required. No ASCII art.
 
 ## 5. Affected Callers / Downstream Impact
 
@@ -585,7 +597,13 @@ For each finding, produce the complete 7-section ISSUE_BODY using this template.
 
 ## 4. UML Diagrams (MANDATORY for Critical & Important)
 ```mermaid
-[sequenceDiagram | classDiagram | stateDiagram-v2 — see UML Requirements table]
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Target]
+    A->>B: [action]
+    B-->>A: [defect triggered]
+```
+Fill in real participants, messages, and annotations. This MUST be valid mermaid syntax inside the fenced block. ASCII art text diagrams are not mermaid and will not render.
 ```
 
 ## 5. Affected Callers / Downstream Impact
@@ -647,7 +665,13 @@ ISSUE_BODY TEMPLATE:
 
 ## 4. UML Diagrams (MANDATORY for Critical & Important)
 ```mermaid
-[diagram]
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Target]
+    A->>B: [action]
+    B-->>A: [defect triggered]
+```
+Fill in real participants, messages, and annotations. Valid mermaid syntax required. No ASCII art.
 
 ## 5. Affected Callers / Downstream Impact
 
@@ -694,7 +718,13 @@ HARD RULES: cite file:line, apply Severity Calibration, verify against source, U
 
 ## 4. UML Diagrams (MANDATORY for Critical & Important)
 ```mermaid
-[diagram]
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Target]
+    A->>B: [action]
+    B-->>A: [defect triggered]
+```
+Fill in real participants, messages, and annotations. Valid mermaid syntax required. No ASCII art.
 
 ## 5. Affected Callers / Downstream Impact
 
@@ -751,7 +781,13 @@ ISSUE_BODY TEMPLATE:
 
 ## 4. UML Diagrams (MANDATORY for Critical & Important)
 ```mermaid
-[diagram]
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Target]
+    A->>B: [action]
+    B-->>A: [defect triggered]
+```
+Fill in real participants, messages, and annotations. Valid mermaid syntax required. No ASCII art.
 
 ## 5. Affected Callers / Downstream Impact
 
@@ -798,7 +834,13 @@ HARD RULES: cite file:line, apply Severity Calibration (missing coverage = Sugge
 
 ## 4. UML Diagrams (MANDATORY for Critical & Important)
 ```mermaid
-[diagram]
+sequenceDiagram
+    participant A as [Caller]
+    participant B as [Target]
+    A->>B: [action]
+    B-->>A: [defect triggered]
+```
+Fill in real participants, messages, and annotations. Valid mermaid syntax required. No ASCII art.
 
 ## 5. Affected Callers / Downstream Impact
 
