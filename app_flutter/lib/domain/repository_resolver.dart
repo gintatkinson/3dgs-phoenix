@@ -32,7 +32,13 @@ class RepositoryResolver {
   static const _defaultEmulatorPort = 8080;
 
   static DataSource? _lastResolved;
+  // NOTE: Once set, the Firebase SDK prevents reconfiguring the emulator
+  // connection within a single process lifetime (BUG #216 — by design).
   static bool _firebaseEmulatorConfigured = false;
+
+  // _isResolving guards against concurrent resolve() calls creating
+  // duplicate connections (BUG #215).
+  static bool _isResolving = false;
 
   /// Resolves and initialises the appropriate backend.
   ///
@@ -58,36 +64,48 @@ class RepositoryResolver {
     String? dataSourceType,
     bool useEmulator = true,
   }) async {
-    String type = dataSourceType ?? 'sqlite';
-
-    // If no explicit type, try reading from config file
-    if (dataSourceType == null) {
-      final path = configPath ?? _defaultConfig;
-      try {
-        final configJson = await rootBundle.loadString(path);
-        final config = jsonDecode(configJson) as Map<String, dynamic>;
-        type = config['repository_type'] as String? ?? 'sqlite';
-      } catch (_) {}
+    if (_isResolving) {
+      if (_lastResolved != null) return _lastResolved!;
+      while (_isResolving) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      if (_lastResolved != null) return _lastResolved!;
     }
+    _isResolving = true;
+    try {
+      String type = dataSourceType ?? 'sqlite';
 
-    await _lastResolved?.dispose();
-    final DataSource resolved;
-    switch (type) {
-      case 'firebase':
-        resolved = await _createFirebaseAdapter(useEmulator: useEmulator);
-      case 'sqlite':
-        resolved = await _createSqliteAdapter(
-          dbAssetPath: dbAssetPath,
-          inMemory: sqliteInMemory,
-        );
-      default:
-        resolved = await _createSqliteAdapter(
-          dbAssetPath: dbAssetPath,
-          inMemory: sqliteInMemory,
-        );
+      // If no explicit type, try reading from config file
+      if (dataSourceType == null) {
+        final path = configPath ?? _defaultConfig;
+        try {
+          final configJson = await rootBundle.loadString(path);
+          final config = jsonDecode(configJson) as Map<String, dynamic>;
+          type = config['repository_type'] as String? ?? 'sqlite';
+        } catch (_) {}
+      }
+
+      await _lastResolved?.dispose();
+      final DataSource resolved;
+      switch (type) {
+        case 'firebase':
+          resolved = await _createFirebaseAdapter(useEmulator: useEmulator);
+        case 'sqlite':
+          resolved = await _createSqliteAdapter(
+            dbAssetPath: dbAssetPath,
+            inMemory: sqliteInMemory,
+          );
+        default:
+          resolved = await _createSqliteAdapter(
+            dbAssetPath: dbAssetPath,
+            inMemory: sqliteInMemory,
+          );
+      }
+      _lastResolved = resolved;
+      return resolved;
+    } finally {
+      _isResolving = false;
     }
-    _lastResolved = resolved;
-    return resolved;
   }
 
   /// Initialies Firebase and returns a Firestore-backed DataSource.
@@ -161,7 +179,9 @@ class RepositoryResolver {
         if (exists) {
           try {
             await dbFile.delete();
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('Failed to delete outdated database file: $e');
+          }
         }
         final assetPath = dbAssetPath ?? _defaultDbAsset;
         try {
@@ -174,7 +194,9 @@ class RepositoryResolver {
             decodedBytes = await compute(gzip.decode, decodedBytes);
           }
           await dbFile.writeAsBytes(decodedBytes);
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('Failed to write database file "$dbPath": $e');
+        }
       }
     }
 
