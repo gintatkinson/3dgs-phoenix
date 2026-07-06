@@ -1010,6 +1010,90 @@ class Scene3DViewportPainter extends CustomPainter {
     this.imageryProvider = ImageryProvider.arcGisSatellite,
   });
 
+  // Reusable paints to avoid per-iteration allocations in the hot 60fps rendering path.
+  late final Paint _starPaint = Paint()..style = PaintingStyle.fill;
+
+  late final Paint _orbitPaint = Paint()
+    ..color = const Color(0x66FFB300)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+  late final Paint _orbitGlowPaint = Paint()
+    ..color = const Color(0x1FFFB300)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3.0;
+
+  late final Paint _dropPaint = Paint()
+    ..color = const Color(0x80FFFFFF)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+
+  late final Paint _satNodePaint = Paint()
+    ..color = const Color(0xFFFFB300)
+    ..style = PaintingStyle.fill;
+  late final Paint _satNodeGlowPaint = Paint()
+    ..color = const Color(0x66FFB300)
+    ..style = PaintingStyle.fill;
+  late final Paint _innerWhitePaint = Paint()
+    ..color = Colors.white
+    ..style = PaintingStyle.fill;
+
+  late final Paint _gsPaint = Paint()
+    ..color = const Color(0xFF00E5FF)
+    ..style = PaintingStyle.fill;
+  late final Paint _gsGlowPaint = Paint()
+    ..color = const Color(0x6600E5FF)
+    ..style = PaintingStyle.fill;
+
+  late final Paint _uwRingPaint = Paint()
+    ..color = const Color(0xFF00E5FF).withOpacity(0.5)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+
+  late final Paint _labelBgPaint = Paint()
+    ..color = const Color(0xE6000000)
+    ..style = PaintingStyle.fill;
+  late final Paint _labelBorderPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+
+  late final Paint _linkPaint = Paint()
+    ..color = const Color(0xFFFF6D00)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.5;
+  late final Paint _linkGlowPaint = Paint()
+    ..color = const Color(0x33FF6D00)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 4.0;
+
+  late final Paint _packetPaint = Paint()
+    ..color = const Color(0xFFFFD54F);
+
+  late final Paint _bandFillPaint = Paint()..style = PaintingStyle.fill;
+  late final Paint _bandBorderPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.4;
+
+  late final Paint _gridPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.8;
+
+  late final Paint _flarePaint = Paint()
+    ..color = const Color(0xFFFF3D00).withOpacity(0.8)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2.5;
+  late final Paint _flareGlowPaint = Paint()
+    ..color = const Color(0x33FF3D00)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 6.0;
+
+  late final Paint _reticleDotPaint = Paint()
+    ..color = const Color(0xFF00E5FF)
+    ..style = PaintingStyle.fill;
+  late final Paint _reticlePaint = Paint()
+    ..color = const Color(0xCC00E5FF)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+
   ProjectedPoint project(
     double lat,
     double lng,
@@ -1139,10 +1223,8 @@ class Scene3DViewportPainter extends CustomPainter {
       final double ryVal = rand.nextDouble() * size.height;
       final double rSize = rand.nextDouble() * 1.5 + 0.5;
       final double rOpacity = rand.nextDouble() * 0.7 + 0.3;
-      final Paint starPaint = Paint()
-        ..color = Color.fromRGBO(255, 255, 255, rOpacity)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(rxVal, ryVal), rSize, starPaint);
+      _starPaint.color = Color.fromRGBO(255, 255, 255, rOpacity);
+      canvas.drawCircle(Offset(rxVal, ryVal), rSize, _starPaint);
     }
 
     // 2. Astronomical Body customization (corona, atmospheric glows)
@@ -1238,10 +1320,7 @@ class Scene3DViewportPainter extends CustomPainter {
     final double tilt = baseTilt + userTilt;
 
     // 5. Draw Grid lines (Meridians & Parallels) - front hemisphere only
-    final Paint frontGridPaint = Paint()
-      ..color = gridColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
+    _gridPaint.color = gridColor;
 
     const int numMeridians = 12;
     const int meridianSteps = 30;
@@ -1255,7 +1334,7 @@ class Scene3DViewportPainter extends CustomPainter {
         final ProjectedPoint p2 = project(lat2, lng, 6378137.0, center, rotationAngle, tilt, size);
         
         if (p1.z >= 0 && p2.z >= 0) {
-          canvas.drawLine(p1.offset, p2.offset, frontGridPaint);
+          canvas.drawLine(p1.offset, p2.offset, _gridPaint);
         }
       }
     }
@@ -1272,7 +1351,7 @@ class Scene3DViewportPainter extends CustomPainter {
         final ProjectedPoint p2 = project(lat, lng2, 6378137.0, center, rotationAngle, tilt, size);
         
         if (p1.z >= 0 && p2.z >= 0) {
-          canvas.drawLine(p1.offset, p2.offset, frontGridPaint);
+          canvas.drawLine(p1.offset, p2.offset, _gridPaint);
         }
       }
     }
@@ -1288,13 +1367,8 @@ class Scene3DViewportPainter extends CustomPainter {
       ];
 
       for (final (latMax, latMin, color) in bands) {
-        final Paint bandPaint = Paint()
-          ..color = color
-          ..style = PaintingStyle.fill;
-        final Paint bandBorder = Paint()
-          ..color = color.withOpacity(0.4)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.4;
+        _bandFillPaint.color = color;
+        _bandBorderPaint.color = color.withOpacity(0.4);
 
         const int steps = 60;
         final List<ProjectedPoint> pts = [];
@@ -1316,21 +1390,12 @@ class Scene3DViewportPainter extends CustomPainter {
             path.lineTo(pts[i].offset.dx, pts[i].offset.dy);
           }
           path.close();
-          canvas.drawPath(path, bandPaint);
-          canvas.drawPath(path, bandBorder);
+          canvas.drawPath(path, _bandFillPaint);
+          canvas.drawPath(path, _bandBorderPaint);
         }
       }
     } else {
       // Proxima Centauri: Solar flares and plasma arcs
-      final Paint flarePaint = Paint()
-        ..color = const Color(0xFFFF3D00).withOpacity(0.8)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5;
-      final Paint flareGlowPaint = Paint()
-        ..color = const Color(0x33FF3D00)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6.0;
-
       const int numFlares = 8;
       for (int f = 0; f < numFlares; f++) {
         final double baseAngle = f * (2 * math.pi / numFlares);
@@ -1357,8 +1422,8 @@ class Scene3DViewportPainter extends CustomPainter {
           ..moveTo(ptStart.dx, ptStart.dy)
           ..quadraticBezierTo(ptControl.dx, ptControl.dy, ptEnd.dx, ptEnd.dy);
           
-        canvas.drawPath(flarePath, flareGlowPaint);
-        canvas.drawPath(flarePath, flarePaint);
+        canvas.drawPath(flarePath, _flareGlowPaint);
+        canvas.drawPath(flarePath, _flarePaint);
       }
     }
 
@@ -1497,15 +1562,6 @@ class Scene3DViewportPainter extends CustomPainter {
 
       // Draw space trajectory loops
       if (type == 'space') {
-        final Paint orbitPaint = Paint()
-          ..color = const Color(0x66FFB300)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0;
-        final Paint orbitGlowPaint = Paint()
-          ..color = const Color(0x1FFFB300)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3.0;
-
         final Path orbitPath = Path();
         bool orbitStarted = false;
         const int steps = 60;
@@ -1524,8 +1580,8 @@ class Scene3DViewportPainter extends CustomPainter {
             orbitStarted = false;
           }
         }
-        canvas.drawPath(orbitPath, orbitGlowPaint);
-        canvas.drawPath(orbitPath, orbitPaint);
+        canvas.drawPath(orbitPath, _orbitGlowPaint);
+        canvas.drawPath(orbitPath, _orbitPaint);
       }
 
       // Project the node
@@ -1537,56 +1593,27 @@ class Scene3DViewportPainter extends CustomPainter {
         // Draw vertical drop line from satellite to surface
         if (type == 'space' && showDropLines) {
           final surfaceProj = project(lat, currentLng, 6378137.0, center, rotationAngle, tilt, size);
-          final Paint dropPaint = Paint()
-            ..color = const Color(0x80FFFFFF)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.0;
-          
+
           const int dashes = 10;
           for (int d = 0; d < dashes; d++) {
             final Offset pStart = Offset.lerp(proj.offset, surfaceProj.offset, d / dashes)!;
             final Offset pEnd = Offset.lerp(proj.offset, surfaceProj.offset, (d + 0.5) / dashes)!;
-            canvas.drawLine(pStart, pEnd, dropPaint);
+            canvas.drawLine(pStart, pEnd, _dropPaint);
           }
         }
 
         // Draw nodes
         if (showDevices) {
           if (type == 'space') {
-            final Paint satNodePaint = Paint()
-              ..color = const Color(0xFFFFB300)
-              ..style = PaintingStyle.fill;
-            final Paint satNodeGlowPaint = Paint()
-              ..color = const Color(0x66FFB300)
-              ..style = PaintingStyle.fill;
-            final Paint innerWhitePaint = Paint()
-              ..color = Colors.white
-              ..style = PaintingStyle.fill;
-
-            canvas.drawCircle(proj.offset, 7.0, satNodeGlowPaint);
-            canvas.drawCircle(proj.offset, 4.0, satNodePaint);
-            canvas.drawCircle(proj.offset, 1.8, innerWhitePaint);
+            canvas.drawCircle(proj.offset, 7.0, _satNodeGlowPaint);
+            canvas.drawCircle(proj.offset, 4.0, _satNodePaint);
+            canvas.drawCircle(proj.offset, 1.8, _innerWhitePaint);
           } else if (type == 'ground') {
-            final Paint gsPaint = Paint()
-              ..color = const Color(0xFF00E5FF)
-              ..style = PaintingStyle.fill;
-            final Paint gsGlowPaint = Paint()
-              ..color = const Color(0x6600E5FF)
-              ..style = PaintingStyle.fill;
-
-            canvas.drawCircle(proj.offset, 6.0, gsGlowPaint);
-            canvas.drawCircle(proj.offset, 3.0, gsPaint);
+            canvas.drawCircle(proj.offset, 6.0, _gsGlowPaint);
+            canvas.drawCircle(proj.offset, 3.0, _gsPaint);
           } else if (type == 'underwater') {
-            final Paint uwPaint = Paint()
-              ..color = const Color(0xFF00E5FF)
-              ..style = PaintingStyle.fill;
-            final Paint uwRingPaint = Paint()
-              ..color = const Color(0xFF00E5FF).withOpacity(0.5)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1.0;
-
-            canvas.drawCircle(proj.offset, 3.0, uwPaint);
-            canvas.drawCircle(proj.offset, 7.5, uwRingPaint);
+            canvas.drawCircle(proj.offset, 3.0, _gsPaint);
+            canvas.drawCircle(proj.offset, 7.5, _uwRingPaint);
           }
 
           if (showLabels) {
@@ -1612,15 +1639,9 @@ class Scene3DViewportPainter extends CustomPainter {
               ),
               const Radius.circular(8),
             );
-            final Paint bgPaint = Paint()
-              ..color = const Color(0xE6000000)
-              ..style = PaintingStyle.fill;
-            final Paint borderPaint = Paint()
-              ..color = textColor.withOpacity(0.4)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1.0;
-            canvas.drawRRect(capsuleRRect, bgPaint);
-            canvas.drawRRect(capsuleRRect, borderPaint);
+            _labelBorderPaint.color = textColor.withOpacity(0.4);
+            canvas.drawRRect(capsuleRRect, _labelBgPaint);
+            canvas.drawRRect(capsuleRRect, _labelBorderPaint);
             textPainter.paint(canvas, textPos);
           }
         }
@@ -1629,15 +1650,6 @@ class Scene3DViewportPainter extends CustomPainter {
 
     // 8. Draw Network Links & Active Packets (Dynamic DB-Backed)
     if (showLinks && showDevices) {
-      final Paint linkPaint = Paint()
-        ..color = const Color(0xFFFF6D00)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
-      final Paint linkGlowPaint = Paint()
-        ..color = const Color(0x33FF6D00)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4.0;
-
       for (int i = 0; i < links.length; i++) {
         final link = links[i];
         final String n1 = link.source;
@@ -1647,21 +1659,18 @@ class Scene3DViewportPainter extends CustomPainter {
         final ProjectedPoint? p2 = allProjectedNodes[n2];
         
         if (p1 != null && p2 != null) {
-          canvas.drawLine(p1.offset, p2.offset, linkGlowPaint);
-          canvas.drawLine(p1.offset, p2.offset, linkPaint);
+          canvas.drawLine(p1.offset, p2.offset, _linkGlowPaint);
+          canvas.drawLine(p1.offset, p2.offset, _linkPaint);
 
           final double packetT = (i * 0.25) % 1.0;
           final Offset packetOffset = Offset.lerp(p1.offset, p2.offset, packetT)!;
-          canvas.drawCircle(packetOffset, 2.5, Paint()..color = const Color(0xFFFFD54F));
+          canvas.drawCircle(packetOffset, 2.5, _packetPaint);
         }
       }
     }
 
     // 9. Draw targeting HUD reticle at the center
-    final Paint dotPaint = Paint()
-      ..color = const Color(0xFF00E5FF)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 3.0, dotPaint);
+    canvas.drawCircle(center, 3.0, _reticleDotPaint);
 
     final double pulseOpacity = 1.0;
     final double pulseRadius = 0.0;
@@ -1671,21 +1680,17 @@ class Scene3DViewportPainter extends CustomPainter {
       ..strokeWidth = 2.0;
     canvas.drawCircle(center, pulseRadius, pulsePaint);
 
-    final Paint reticlePaint = Paint()
-      ..color = const Color(0xCC00E5FF)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    canvas.drawCircle(center, 10.0, reticlePaint);
+    canvas.drawCircle(center, 10.0, _reticlePaint);
 
     canvas.save();
     final double reticleRotation = 0.0;
     canvas.translate(center.dx, center.dy);
     canvas.rotate(reticleRotation);
     
-    canvas.drawLine(const Offset(0, -18), const Offset(0, -10), reticlePaint);
-    canvas.drawLine(const Offset(0, 10), const Offset(0, 18), reticlePaint);
-    canvas.drawLine(const Offset(-18, 0), const Offset(-10, 0), reticlePaint);
-    canvas.drawLine(const Offset(10, 0), const Offset(18, 0), reticlePaint);
+    canvas.drawLine(const Offset(0, -18), const Offset(0, -10), _reticlePaint);
+    canvas.drawLine(const Offset(0, 10), const Offset(0, 18), _reticlePaint);
+    canvas.drawLine(const Offset(-18, 0), const Offset(-10, 0), _reticlePaint);
+    canvas.drawLine(const Offset(10, 0), const Offset(18, 0), _reticlePaint);
     
     canvas.restore();
   }
