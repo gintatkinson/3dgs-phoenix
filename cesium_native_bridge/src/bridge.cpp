@@ -7,6 +7,7 @@
 #include <glm/trigonometric.hpp>
 
 #include <cstring>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -19,7 +20,7 @@ struct BridgeState {
   std::string lastError;
 };
 
-std::unordered_map<bridge_handle_t, std::unique_ptr<BridgeState>> g_states;
+std::unordered_map<bridge_handle_t, std::shared_ptr<BridgeState>> g_states;
 std::mutex g_statesMutex;
 bridge_handle_t g_nextHandle = 1;
 
@@ -50,8 +51,15 @@ bridge_handle_t bridge_initialize(
 }
 
 void bridge_shutdown(bridge_handle_t handle) {
-  std::lock_guard<std::mutex> lock(g_statesMutex);
-  g_states.erase(handle);
+  std::shared_ptr<BridgeState> state;
+  {
+    std::lock_guard<std::mutex> lock(g_statesMutex);
+    auto it = g_states.find(handle);
+    if (it != g_states.end()) {
+      state = it->second;
+      g_states.erase(it);
+    }
+  }
 }
 
 int32_t bridge_is_ready(bridge_handle_t handle) {
