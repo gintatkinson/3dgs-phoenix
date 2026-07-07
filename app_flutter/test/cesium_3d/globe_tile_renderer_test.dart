@@ -8,6 +8,8 @@ import 'package:app_flutter/domain/cesium_3d/globe_tile_renderer.dart';
 import 'package:app_flutter/domain/cesium_3d/projected_point.dart';
 import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
+import 'package:app_flutter/features/topology/scene_3d_viewport.dart';
+import 'package:app_flutter/features/topology/topology_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class MockTileFetcher extends TileFetcher {
@@ -234,6 +236,60 @@ void main() {
 
       expect(fetcher.totalNetworkFetches, equals(0),
           reason: 'Subsequent calls for a stationary camera must result in 0 new network fetches');
+    });
+
+    test('Test 6 (Scenario 6 - Horizon projection clamping)', () {
+      final camera = VirtualCamera(
+        latitude: 0.0,
+        longitude: 0.0,
+        altitude: 500000.0, // 500,000m
+        heading: 0.0,
+        pitch: 0.0,
+        roll: 0.0,
+      );
+
+      final painter = Scene3DViewportPainter(
+        camera: camera,
+        activeStyle: 'dark',
+        astronomicalBody: 'Earth',
+        elevationActive: false,
+        showDevices: true,
+        showLinks: true,
+        showLabels: true,
+        showDropLines: true,
+        topologyData: const TopologyData(coordinateMapping: {}, nodes: [], links: []),
+        userRotationX: 0.0,
+        userTilt: 0.0,
+        zoomScale: 1.0,
+      );
+
+      const double width = 800.0;
+      const double height = 600.0;
+      final center = ui.Offset(width * 0.45, height * 0.5);
+      final size = const ui.Size(width, height);
+
+      final projectedPoint = painter.project(
+        0.0, // lat
+        math.pi, // lng (180 degrees)
+        6378137.0, // height (Earth surface radius)
+        center,
+        0.0, // rotationY
+        0.0, // tilt
+        size,
+      );
+
+      const double R = 6378137.0;
+      final double cRad = R + 500000.0;
+      final double F = size.shortestSide * 1.2; // 600.0 * 1.2 = 720.0
+      final double projectedRadius = R * F / math.sqrt(cRad * cRad - R * R);
+
+      final double actualDistance = (projectedPoint.offset - center).distance;
+
+      // Assert z is equal to -0.01 (culled status)
+      expect(projectedPoint.z, equals(-0.01));
+
+      // Assert distance from projectedCenter is close to projectedRadius (within 1e-4 tolerance)
+      expect(actualDistance, closeTo(projectedRadius, 1e-4));
     });
   });
 }
