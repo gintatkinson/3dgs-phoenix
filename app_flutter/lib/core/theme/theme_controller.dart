@@ -29,7 +29,7 @@ class ThemeController extends ChangeNotifier {
 
   Future<void> _enqueue(Future<void> Function() operation) {
     return _operationQueue = _operationQueue.then((_) {
-      if (_disposed) return;
+      if (_disposed) return Future<void>.value();
       return operation();
     }).catchError((_) {});
   }

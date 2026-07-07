@@ -76,11 +76,11 @@ class _SidebarTreeState extends State<SidebarTree> {
                 if (event is KeyDownEvent) {
                   final key = event.logicalKey;
                   if (key == LogicalKeyboardKey.arrowDown) {
-                    viewModel.moveFocusDown();
+                    viewModel.handleArrowDown();
                     return KeyEventResult.handled;
                   }
                   if (key == LogicalKeyboardKey.arrowUp) {
-                    viewModel.moveFocusUp();
+                    viewModel.handleArrowUp();
                     return KeyEventResult.handled;
                   }
                   if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.space) {

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'dart:ui' as ui;
 
+import 'package:meta/meta.dart';
 import 'package:app_flutter/domain/cesium_3d/projected_point.dart';
 import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
@@ -396,5 +397,44 @@ class GlobeTileRenderer {
     if (c > m) m = c;
     if (d > m) m = d;
     return m;
+  }
+
+  @visibleForTesting
+  List<TileCoord> visibleTilesForTesting(VirtualCamera camera, ui.Size viewportSize) {
+    return _visibleTiles(camera, viewportSize);
+  }
+
+  @visibleForTesting
+  TileCoord latLngToTileForTesting(double lat, double lng, int zoom) {
+    return _latLngToTile(lat, lng, zoom);
+  }
+
+  @visibleForTesting
+  static List<int> calculateIndicesForTesting(List<double> zs) {
+    const int subdivisions = 4;
+    final List<int> indices = [];
+    for (int r = 0; r < subdivisions; r++) {
+      for (int c = 0; c < subdivisions; c++) {
+        final int i0 = r * (subdivisions + 1) + c;
+        final int i1 = i0 + 1;
+        final int i2 = (r + 1) * (subdivisions + 1) + c;
+        final int i3 = i2 + 1;
+
+        // Triangle 1: (i0, i1, i2)
+        if (zs[i0] >= 0.0 && zs[i1] >= 0.0 && zs[i2] >= 0.0) {
+          indices.add(i0);
+          indices.add(i1);
+          indices.add(i2);
+        }
+
+        // Triangle 2: (i1, i3, i2)
+        if (zs[i1] >= 0.0 && zs[i3] >= 0.0 && zs[i2] >= 0.0) {
+          indices.add(i1);
+          indices.add(i3);
+          indices.add(i2);
+        }
+      }
+    }
+    return indices;
   }
 }
