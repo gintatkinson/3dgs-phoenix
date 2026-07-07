@@ -92,7 +92,7 @@ void main() {
 
     // Read initial camera state
     final state = tester.state(find.byType(Scene3DViewport)) as dynamic;
-    final CameraController controller = state.cameraController;
+    final CameraController controller = state.cameraController as CameraController;
     final double initialLongitude = controller.current.longitude;
     final double initialAltitude = controller.current.altitude;
 
