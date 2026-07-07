@@ -118,6 +118,11 @@ classDiagram
   - **Given** the 3D viewport is actively rendering.
   - **When** the camera moves or stays stationary.
   - **Then** the visible tile calculator must never generate more tiles than the image cache capacity, preventing cache thrashing, and the paint loop must execute within 16.6ms.
+- **Scenario 6: Geometric distortion prevention for horizon-crossing triangles**
+  - **Given** the 3D viewport is actively rendering.
+  - **When** triangles cross the horizon boundary (with mixed visible/invisible vertices).
+  - **Then** the projection engine must clamp the screen-space coordinates of the invisible vertices to the sphere's silhouette boundary to prevent texture folding and maintain a circular globe silhouette.
+
 
 ## 4. Source References
 Structural Schema: `app_flutter/assets/logical-layout.json`
