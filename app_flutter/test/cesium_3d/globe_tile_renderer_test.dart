@@ -1,10 +1,26 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:app_flutter/domain/cesium_3d/globe_tile_renderer.dart';
+import 'package:app_flutter/domain/cesium_3d/projected_point.dart';
 import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class MockTileFetcher extends TileFetcher {
+  @override
+  bool isEnabled() => true;
+
+  @override
+  Future<Uint8List?> fetchTile(
+      ImageryProvider provider, int z, int x, int y) async {
+    return base64Decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+  }
+}
 
 void main() {
   group('GlobeTileRenderer Scenario 4 BDD Tests', () {
@@ -51,6 +67,66 @@ void main() {
       // Under current implementation, it is culled, resulting in empty indices.
       expect(indices, containsAll([0, 1, 5]),
           reason: 'Expected triangle containing visible vertex 0 not to be culled');
+    });
+
+    test('Scenario 4 - Polar cap clamping', () async {
+      final fetcher = MockTileFetcher();
+      int loadedCount = 0;
+      final completer = Completer<void>();
+
+      final renderer = GlobeTileRenderer(
+        fetcher: fetcher,
+        onTileLoaded: () {
+          loadedCount++;
+          if (loadedCount >= 16) {
+            completer.complete();
+          }
+        },
+      );
+
+      final camera = VirtualCamera(
+        latitude: 0.0,
+        longitude: 0.0,
+        altitude: 10000000.0,
+        heading: 0.0,
+        pitch: 0.0,
+        roll: 0.0,
+      );
+
+      // Trigger tile fetch for zoom 2 tiles (includes 2/0/0 and 2/0/3)
+      renderer.beginTileFetch(camera, const ui.Size(800, 600));
+      await completer.future;
+
+      // Now call renderTiles and capture the latitudes passed to projectFn
+      final latitudes = <double>[];
+      final canvas = ui.Canvas(ui.PictureRecorder());
+
+      renderer.renderTiles(
+        canvas,
+        camera,
+        const ui.Size(800, 600),
+        ui.Offset.zero,
+        1000.0,
+        (lat, lng) {
+          latitudes.add(lat);
+          return ProjectedPoint(ui.Offset.zero, 1.0);
+        },
+      );
+
+      // Helper to compute unclamped latitude at zoom 2, y=0 and y=4
+      double computeUnclampedLat(double y, int z) {
+        final n = math.pi * (1.0 - 2.0 * y / math.pow(2, z));
+        return math.atan((math.exp(n) - math.exp(-n)) / 2.0) * 180.0 / math.pi;
+      }
+      final unclampedNorth = computeUnclampedLat(0, 2);
+      final unclampedSouth = computeUnclampedLat(4, 2);
+
+      // Verify that the captured latitudes contain exactly 90.0 and -90.0,
+      // and do NOT contain unclamped boundary latitudes (~85.0511 or ~-85.0511)
+      expect(latitudes, contains(90.0));
+      expect(latitudes, contains(-90.0));
+      expect(latitudes, isNot(contains(unclampedNorth)));
+      expect(latitudes, isNot(contains(unclampedSouth)));
     });
   });
 }
