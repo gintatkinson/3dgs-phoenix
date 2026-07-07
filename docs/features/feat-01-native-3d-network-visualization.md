@@ -123,3 +123,6 @@ Normative Specification: [Architectural Blueprint: Native Desktop 3D Network Vis
 - **Target LUI Component:** TopographicalView
 - **Target Layout Container ID:** topology_pane
 - **Data Source Bindings:** token:layout.data_sources.topology
+
+## Tracked Defects
+- [ ] #240 - BUG: Globe tile pixelation near horizon and untiled rendering gaps at sphere edge
