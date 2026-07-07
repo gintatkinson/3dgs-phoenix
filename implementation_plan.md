@@ -32,6 +32,17 @@
     }
     ```
 
+### `app_flutter/lib/domain/cesium_3d/globe_tile_renderer.dart`
+- In `renderTiles` method (around line 323):
+  - Replace:
+    ```dart
+    const int subdivisions = 4;
+    ```
+    with:
+    ```dart
+    final int subdivisions = (z == 0) ? 16 : ((z == 1) ? 12 : ((z == 2) ? 8 : 4));
+    ```
+
 ## 3. Success / Verification Criteria
 - Run target tests in `app_flutter`:
   `flutter test test/cesium_3d/globe_tile_renderer_test.dart test/topology/scene_3d_viewport_test.dart`

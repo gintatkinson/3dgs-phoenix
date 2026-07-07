@@ -320,7 +320,7 @@ class GlobeTileRenderer {
       final double lonW = _tile2lon(x, z);
       final double lonE = _tile2lon(x + 1, z);
 
-      const int subdivisions = 4;
+      final int subdivisions = (z == 0) ? 16 : ((z == 1) ? 12 : ((z == 2) ? 8 : 4));
       final List<ui.Offset> positions = [];
       final List<ui.Offset> textureCoordinates = [];
       final List<double> zs = [];
