@@ -136,4 +136,4 @@ Normative Specification: [Architectural Blueprint: Native Desktop 3D Network Vis
 ## Tracked Defects
 - [ ] #240 - BUG: Globe tile pixelation near horizon and untiled rendering gaps at sphere edge
 - [ ] #241 - BUG: Horizon-crossing triangles fold inward causing texture warping and non-circular globe shape
-
+- [ ] #242 - BUG: SplitWorkspace negative width/height layout constraints cause Flutter crashes on window resize
