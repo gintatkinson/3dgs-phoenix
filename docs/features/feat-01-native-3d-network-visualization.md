@@ -7,7 +7,7 @@ spec_source: "Architectural Blueprint: Native Desktop 3D Network Visualization w
 issue_id: 239
 ---
 
-# Feature: Native Desktop 3D Network Visualization
+# Feature 01: Native Desktop 3D Network Visualization (Issue #239)
 
 ## Parent Epic
 - [ ] #243 - 3D Visualization Epic (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-01-3d-visualization.md) (Aggregates high-performance native rendering pipelines)
