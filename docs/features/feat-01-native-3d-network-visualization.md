@@ -4,7 +4,7 @@ type: "feature"
 interface_type: "ui"
 generation_mode: "subagent"
 spec_source: "Architectural Blueprint: Native Desktop 3D Network Visualization with Flutter and Cesium"
-issue_id: 1
+issue_id: 239
 ---
 
 # Feature: Native Desktop 3D Network Visualization
@@ -110,6 +110,10 @@ classDiagram
   - **Given** the desktop application launches.
   - **When** the graphics driver detects Impeller is disabled.
   - **Then** the application alerts the user that `--enable-impeller` is required.
+- **Scenario 4: Level of detail (SSE) and culling consistency near the horizon**
+  - **Given** the 3D viewport is rendering a globe at a camera altitude h.
+  - **When** the camera view renders tiles extending to the horizon boundary.
+  - **Then** the visible tile finder must dynamically request a grid range (dx, dy) of tiles spanning the horizon angle theta = acos(R / (R + h)), and the renderer must not cull any mesh triangles where at least one vertex lies in the front hemisphere (z >= 0.0).
 
 ## 4. Source References
 Structural Schema: `app_flutter/assets/logical-layout.json`
