@@ -137,3 +137,9 @@ Normative Specification: [Architectural Blueprint: Native Desktop 3D Network Vis
 - [ ] #240 - BUG: Globe tile pixelation near horizon and untiled rendering gaps at sphere edge
 - [ ] #241 - BUG: Horizon-crossing triangles fold inward causing texture warping and non-circular globe shape
 - [ ] #242 - BUG: SplitWorkspace negative width/height layout constraints cause Flutter crashes on window resize
+
+### Scenario 7: Horizon Clamping Centered at Projected Earth Center
+- Given a 3D viewport containing an Earth sphere
+- And the camera is tilted (pitch = -45.0) such that the projected Earth center shifts away from the screen center
+- When vertices on the culled side of the horizon are projected
+- Then their projected screen coordinates must be clamped exactly to the projected silhouette boundary (radius R_proj centered at the projected Earth center).

@@ -100,5 +100,67 @@ void main() {
       // Directly overhead high-altitude satellite should NOT be culled by the new logic
       expect(resultC.z, greaterThan(0.0));
     });
+
+    test('Horizon clamping centers on projected Earth center under tilted camera', () {
+      final camera = VirtualCamera.clamped(
+        latitude: 0.0,
+        longitude: 0.0,
+        altitude: 10000000.0, // 10,000 km altitude
+        heading: 0,
+        pitch: -45, // Tilted camera (not looking straight down)
+        roll: 0,
+      );
+
+      final painter = Scene3DViewportPainter(
+        camera: camera,
+        activeStyle: 'dark',
+        astronomicalBody: 'Earth',
+        elevationActive: false,
+        showDevices: true,
+        showLinks: true,
+        showLabels: true,
+        showDropLines: true,
+        userRotationX: 0.0,
+        userTilt: 0.0,
+        zoomScale: 1.0,
+      );
+
+      const Size viewportSize = Size(800, 600);
+      const Offset viewportCenter = Offset(360.0, 300.0); // 800 * 0.45, 600 * 0.5
+
+      final earthCenterProj = painter.project(
+        0.0,
+        0.0,
+        0.0, // height = 0 is center
+        viewportCenter,
+        0.0,
+        0.0,
+        viewportSize,
+      );
+      final Offset projectedCenter = earthCenterProj.offset;
+
+      final culledPointProj = painter.project(
+        0.0,
+        math.pi, // opposite longitude
+        R,       // surface
+        viewportCenter,
+        0.0,
+        0.0,
+        viewportSize,
+      );
+
+      expect(culledPointProj.z, equals(-1.0));
+
+      final double dx = culledPointProj.offset.dx - projectedCenter.dx;
+      final double dy = culledPointProj.offset.dy - projectedCenter.dy;
+      final double distanceToProjectedCenter = math.sqrt(dx * dx + dy * dy);
+
+      final double cRad = R + camera.altitude;
+      final double F = viewportSize.shortestSide * 1.2;
+      final double radDiff = cRad * cRad - R * R;
+      final double expectedProjectedRadius = R * F / math.sqrt(radDiff <= 0.0 ? 1.0 : radDiff);
+
+      expect((distanceToProjectedCenter - expectedProjectedRadius).abs(), lessThan(1e-5));
+    });
   });
 }

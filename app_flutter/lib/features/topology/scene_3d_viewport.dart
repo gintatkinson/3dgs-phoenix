@@ -1201,13 +1201,38 @@ class Scene3DViewportPainter extends CustomPainter {
       depthVal = -1.0;
       final double radDiff = cRad * cRad - R * R;
       final double projectedRadius = R * F / math.sqrt(radDiff <= 0.0 ? 1.0 : radDiff);
-      
-      final double dx = projectedOffset.dx - center.dx;
-      final double dy = projectedOffset.dy - center.dy;
+
+      // Project the Earth's center (0,0,0) in ECEF onto the camera viewport to find the screen coordinate of the Earth's center
+      final double rxc = -cx;
+      final double ryc = -cy;
+      final double rzc = -cz;
+
+      final double x_enuc = rxc * ex + ryc * ey + rzc * ez;
+      final double y_enuc = rxc * nx + ryc * ny + rzc * nz;
+      final double z_enuc = rxc * ux + ryc * uy + rzc * uz;
+
+      final double x1c = x_enuc * cosH + y_enuc * sinH;
+      final double y1c = -x_enuc * sinH + y_enuc * cosH;
+      final double z1c = z_enuc;
+
+      final double x_camc = x1c;
+      final double y_camc = y1c * cosA - z1c * sinA;
+      final double z_camc = y1c * sinA + z1c * cosA;
+
+      final double depthc = -z_camc;
+      final double pScalec = depthc <= 0.0 ? 1.0 : F / depthc;
+
+      final double rx_pixelc = x_camc * pScalec;
+      final double ry_pixelc = y_camc * pScalec;
+
+      final Offset earthCenterScreen = Offset(center.dx + rx_pixelc, center.dy - ry_pixelc);
+
+      final double dx = projectedOffset.dx - earthCenterScreen.dx;
+      final double dy = projectedOffset.dy - earthCenterScreen.dy;
       final double dist = math.sqrt(dx * dx + dy * dy);
       if (dist > 0.0) {
         final double scale = projectedRadius / dist;
-        projectedOffset = Offset(center.dx + dx * scale, center.dy + dy * scale);
+        projectedOffset = Offset(earthCenterScreen.dx + dx * scale, earthCenterScreen.dy + dy * scale);
       }
     }
 
