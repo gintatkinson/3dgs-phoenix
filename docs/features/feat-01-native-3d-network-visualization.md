@@ -114,6 +114,10 @@ classDiagram
   - **Given** the 3D viewport is rendering a globe at a camera altitude h.
   - **When** the camera view renders tiles extending to the horizon boundary.
   - **Then** the visible tile finder must dynamically request a grid range (dx, dy) of tiles spanning the horizon angle theta = acos(R / (R + h)), and the renderer must not cull any mesh triangles where at least one vertex lies in the front hemisphere (z >= 0.0).
+- **Scenario 5: Frame-rate stability and cache thrashing prevention**
+  - **Given** the 3D viewport is actively rendering.
+  - **When** the camera moves or stays stationary.
+  - **Then** the visible tile calculator must never generate more tiles than the image cache capacity, preventing cache thrashing, and the paint loop must execute within 16.6ms.
 
 ## 4. Source References
 Structural Schema: `app_flutter/assets/logical-layout.json`
