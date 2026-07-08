@@ -12,6 +12,24 @@ import 'package:app_flutter/domain/data_sources/sqlite_data_source.dart';
 import 'package:app_flutter/domain/database_initializer.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+Future<void> settle(WidgetTester tester) async {
+  await Future<void>.delayed(const Duration(milliseconds: 50));
+  await tester.pump();
+
+  for (int i = 0; i < 50; i++) {
+    if (find.byType(CircularProgressIndicator).evaluate().isEmpty) {
+      break;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await tester.pump();
+  }
+
+  for (int i = 0; i < 3; i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await tester.pump();
+  }
+}
+
 void main() {
   testWidgets('Dashboard console boots and renders main widgets successfully',
       (WidgetTester tester) async {
@@ -49,15 +67,16 @@ void main() {
           ),
         );
 
-        await tester.pumpAndSettle();
+        await settle(tester);
 
         expect(find.byType(MyApp), findsOneWidget);
         expect(find.byType(DashboardPage), findsOneWidget);
         expect(find.text(AppConfig.title), findsAtLeast(1));
 
         await tester.pumpWidget(Container());
-        await tester.pumpAndSettle();
+        await settle(tester);
       } finally {
+        await Future.delayed(const Duration(milliseconds: 150));
         await db.close();
       }
     });

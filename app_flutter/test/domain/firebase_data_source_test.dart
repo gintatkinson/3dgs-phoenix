@@ -282,6 +282,7 @@ void main() {
           'type_name': 'Master_1',
           'parent_node_id': null,
           'name': 'Custom Master 1',
+          'has_children': true,
         },
         'Child_Node': {
           'type_name': 'RelationChild',
@@ -308,6 +309,7 @@ void main() {
         'Master_1': {
           'type_name': 'Master_1',
           'parent_node_id': null,
+          'has_children': true,
         },
         // Direct child in properties (collection 'data')
         'Master_1_Child_1': {
@@ -345,6 +347,7 @@ void main() {
       mockFirestore.collections['data'] = {
         'Node_A': {
           'name': 'Node A',
+          'has_location': true,
           'position': {
             'location': {
               'ellipsoid': {
@@ -357,6 +360,7 @@ void main() {
         },
         'Node_B': {
           'name': 'Node B',
+          'has_location': true,
           'ietfGeoLocation': {
             'ellipsoid': {
               'latitude': '34.0522',
