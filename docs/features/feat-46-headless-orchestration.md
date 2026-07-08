@@ -18,6 +18,9 @@ This feature provides the host process orchestration layer for spawning, monitor
 ## UML Class Diagram
 ```mermaid
 classDiagram
+    class Coordinator {
+        <<actor>>
+    }
     class UnrealDaemonManager {
         +spawnDaemon(unrealPath : String) Boolean [1]
         +monitorDaemon() Boolean [1]

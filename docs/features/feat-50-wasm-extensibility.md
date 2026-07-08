@@ -18,6 +18,9 @@ This feature provides the WebAssembly execution subsystem of the platform. It em
 ## UML Class Diagram
 ```mermaid
 classDiagram
+    class Coordinator {
+        <<actor>>
+    }
     class WasmtimeEngine {
         +initializeEngine() Boolean [1]
         +loadWasmModule(modulePath : String) Boolean [1]

@@ -18,6 +18,9 @@ This feature provides isolated process spawning and command-line routing for sta
 ## UML Class Diagram
 ```mermaid
 classDiagram
+    class Coordinator {
+        <<actor>>
+    }
     class SceneBootstrapper {
         +boot(args : StringArray) Boolean [1]
     }
