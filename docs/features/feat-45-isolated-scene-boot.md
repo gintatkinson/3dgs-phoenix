@@ -10,7 +10,7 @@ issue_id: 250
 # Feature 45: Isolated Scene Boot
 
 ## Parent Epic
-- [ ] #247 - [Epic 2: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-02-scene-lifecycle.md) (Aggregates multi-process windowing logic)
+- [ ] #247 - [Epic 1: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-01-scene-lifecycle.md) (Aggregates multi-process windowing logic)
 
 ## Description
 This feature provides isolated process spawning and command-line routing for standalone window views. At startup, the app parses main command-line arguments. If `--scene=[id]` is detected, it skips loading the default dashboard shell and boots into an isolated `SceneViewWidget` container. Communications between the coordinator process and scene engines use gRPC over Unix Domain Sockets (UDS) for complete fault segregation. On macOS, these scene processes are launched as helper apps with the `LSUIElement` key set to true to prevent dock icon clutter.

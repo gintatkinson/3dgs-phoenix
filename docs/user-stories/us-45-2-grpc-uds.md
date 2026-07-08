@@ -3,13 +3,13 @@ title: "Fault-Segregated Scene Communication via UDS"
 type: "user-story"
 spec_source: "Project Constitution"
 generation_mode: "subagent"
-epic: "Epic 2: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic"
+epic: "Epic 1: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic"
 ---
 
 # User Story US-45-2: Fault-Segregated Scene Communication via UDS
 
 ## Parent Epic
-- [ ] #247 - [Epic 2: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-02-scene-lifecycle.md) (Aggregates multi-process windowing logic)
+- [ ] #247 - [Epic 1: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-01-scene-lifecycle.md) (Aggregates multi-process windowing logic)
 
 ## Domain Object Mapping
 - **Primary Domain Objects:** SceneBootstrapper, ProcessExecutor, GrpcChannel

@@ -1,12 +1,12 @@
 ---
-title: "3D Visualization Epic"
+title: "Epic 2: 3D Visualization Epic"
 type: "epic"
 generation_mode: "subagent"
 spec_source: "Project Constitution"
 issue_id: 243
 ---
 
-# Epic: 3D Visualization Epic
+# Epic 2: 3D Visualization Epic
 
 ## 1. Context
 The 3D Visualization Epic aggregates high-performance native rendering pipelines required to establish a native, single-process desktop 3D network topology visualization. By interfacing the C++ spatial logic library `cesium-native` (via Dart FFI) with Flutter's low-level `flutter_gpu` and high-level `flutter_scene` libraries, the subsystem renders global-scale photorealistic tilesets and logical microwave line-of-sight (LoS) links directly in the Flutter viewport without embedded webviews or multi-process sharing mechanisms.

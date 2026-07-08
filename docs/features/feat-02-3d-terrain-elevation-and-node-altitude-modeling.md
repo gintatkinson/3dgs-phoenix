@@ -3,14 +3,14 @@ title: "Feature 02: 3D Terrain Elevation and Node Altitude Modeling"
 type: "feature"
 interface_type: "ui"
 generation_mode: "subagent"
-spec_source: "3D Visualization Epic"
+spec_source: "Epic 2: 3D Visualization Epic"
 issue_id: 245
 ---
 
 # Feature 02: 3D Terrain Elevation and Node Altitude Modeling (Issue #245)
 
 ## Parent Epic
-- [ ] #243 - 3D Visualization Epic (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-01-3d-visualization.md)
+- [ ] #243 - Epic 2: 3D Visualization Epic (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-02-3d-visualization.md)
 
 ## Description
 Enables dynamic 3D terrain elevation and ground node altitude modeling in the 3D viewport. When the `3D SURFACE ELEVATION` toggle is active, the viewport painter dynamically offsets terrain mesh vertices using a procedural elevation model (including Mount Fuji and the Japanese Alps) scaled with an amplification factor (80.0x) to ensure prominent visibility. Ground devices/buildings are positioned on top of this elevated terrain, with their local heights amplified (2000.0x) to stand tall above the topography, and drop lines terminate at the elevated terrain surface.
