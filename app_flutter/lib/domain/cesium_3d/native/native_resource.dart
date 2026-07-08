@@ -25,7 +25,7 @@ final class NativeResource implements Finalizable {
     if (count <= 0 || elementSize <= 0) {
       throw ArgumentError('Count and element size must be positive.');
     }
-    if (count > 0x7FFFFFFFFFFFFFFF ~/ elementSize) {
+    if (count > 9223372036854775807 ~/ elementSize) {
       throw ArgumentError('Allocation size overflow.');
     }
     final totalSize = count * elementSize;

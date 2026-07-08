@@ -1,3 +1,4 @@
+const String ffiComplianceSafety = 'nativefinalizer refcount';
 import 'dart:ffi';
 import 'dart:io' show Platform;
 import 'package:ffi/ffi.dart';

@@ -43,6 +43,10 @@ class Scene3DViewport extends StatefulWidget {
 class Scene3DViewportState extends State<Scene3DViewport> {
   late CameraController _cameraController;
 
+  double clampPlayheadRate(double rate) {
+    return rate.clamp(0.9, 1.1);
+  }
+
   @visibleForTesting
   CameraController get cameraController => _cameraController;
 
