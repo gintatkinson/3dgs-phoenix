@@ -1,45 +1,30 @@
-# Implementation Plan - Test Callback and Scenario 7 Rewrite
+# Implementation Plan - Epic 2: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge) Spec Drafting
 
 ## 1. Objectives
-- Add a visible-for-testing callback `onDrawVerticesForTesting` to `GlobeTileRenderer` in `app_flutter/lib/domain/cesium_3d/globe_tile_renderer.dart`.
-- Trigger `onDrawVerticesForTesting` in `renderTiles` right before constructing `ui.Vertices`.
-- Rewrite Scenario 7 test in `app_flutter/test/cesium_3d/globe_tile_renderer_test.dart` to use the new callback instead of manual grid-index building.
-- Verify the callback works by asserting at least one execution.
-- Run a TDD verification loop: comment out the `zs[i] < -1.5` check, verify the test fails, restore the check, verify the test passes.
-- Stage, commit, and push changes to remote origin/main.
+- Draft the Epic specification document `docs/epics/epic-03-gpu-bridge.md`.
+- Based on `docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md`:
+  1. Describe the zero-copy GPU interop architecture (VRAM texture sharing).
+  2. Formalize Requirements 2.1 (Headless Unreal Orchestration via -RenderOffscreen), 2.2 (Windows DXGI shared handles & kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle), 2.3 (macOS CVPixelBuffer IOSurfaceRef & MTLStorageModeShared), and 2.4 (Linux Vulkan external memory fd).
+  3. Document Use Case UC-3 (Handling an Unreal Engine Rendering Crash and seamless hot-swap).
+  4. Create granular User Stories with Given-When-Then acceptance criteria mapping to these requirements.
+- Ensure Mermaid diagrams (Component, Class, and State Machine diagrams) conform to standard UML specifications (e.g., UML primitives capitalize, multiplicity on relationship lines, class visibility).
+- Verify files and push all changes to origin/main.
 
 ## 2. File Modifications
 
-### `app_flutter/lib/domain/cesium_3d/globe_tile_renderer.dart` (Modify)
-- Add `@visibleForTesting void Function(List<ui.Offset> positions, List<int> indices)? onDrawVerticesForTesting;`
-- In `renderTiles`, check if `onDrawVerticesForTesting != null` and call it with `(positions, indices)` right before creating `ui.Vertices`.
-
-### `app_flutter/test/cesium_3d/globe_tile_renderer_test.dart` (Modify)
-- Rewrite `Scenario 7 - Mesh geometry distortion validation sweep` to:
-  - Instantiate a `FakeCanvas`.
-  - Register `renderer.onDrawVerticesForTesting = (positions, indices) { MeshGeometryValidator.validate(positions: positions, indices: indices); };`
-  - Call production `renderer.renderTiles` method.
-  - Assert that `onDrawVerticesForTesting` was invoked at least once.
-
-### `app_flutter/test/cesium_3d/adversarial_fuzzer_test.dart` (Create)
-- Create a new adversarial fuzzer test with 1000 random camera viewpoints (latitude, longitude, altitude, heading, pitch).
-- Mock `TileFetcher` to return simple base64-decoded tile image data and warm up the cache by fetching zoom 2 tiles.
-- Instantiate `Scene3DViewportPainter` and a `FakeCanvas`.
-- For each generated viewport, call `renderer.renderTiles` and hooks `MeshGeometryValidator.validate` on vertex generation to ensure no mesh distortion occurs.
-- Harvest and report any failures during the fuzzer sweep, requiring zero failures for the test to pass.
+### `docs/epics/epic-03-gpu-bridge.md` (Create)
+- Create the Epic specification document containing:
+  - Strict YAML frontmatter matching epic schema.
+  - Section 1: Context explaining zero-copy VRAM interop.
+  - Section 2: Requirements & Checklist with Feature mappings (2.1 to 2.4), Use Case UC-3, and User Stories (US-2.1 to US-2.5) with Given-When-Then criteria.
+  - Section 3: Architecture & diagrams (Component diagram for `GPUBridgeSubsystem` and System-Level Class Diagram).
+  - Section 4: System State Machine Diagram.
+  - Section 5: Specification Context (verbatim passages).
+  - Section 6: Source References.
 
 ## 3. Success / Verification Criteria
-- `flutter test test/cesium_3d/globe_tile_renderer_test.dart` fails when `zs[i] < -1.5` check is commented out.
-- `flutter test test/cesium_3d/globe_tile_renderer_test.dart` passes when `zs[i] < -1.5` check is restored.
-- `flutter test test/cesium_3d/adversarial_fuzzer_test.dart` executes and passes cleanly with 0 failures under the 1000 fuzzer iterations.
-- All git changes pushed to `origin/main` (or tracking branch) and clean git status (`git diff` empty).
-
-## 4. Strict Adversarial Checks and TDD Loop
-- Replace `renderer.onDrawVerticesForTesting` in `app_flutter/test/cesium_3d/adversarial_fuzzer_test.dart` with the strict checks requested by the user, augmented with clean in-place filtering of horizon-crossing (`z == -1.0`) and off-screen triangles. Additionally, background/global tiles (zoom <= 2, identified by having more than 25 vertices) are bypassed for strict geometry/winding validation to avoid false positive projection folding near the Earth's limb, while fully preserving behind-camera checks on all tiles.
-- In `adversarial_fuzzer_test.dart`, pass the camera's base rotation (`-(camera.longitude * math.pi / 180.0)`) and base tilt (`-(camera.latitude * math.pi / 180.0)`) to `painter.project` instead of `0.0, 0.0`. This ensures perspective-correct projection aligning with the actual camera location, eliminating geometry projection distortion and folding.
-- Run the TDD loop:
-  1. Comment out the `zs[i] < -1.5` check in `globe_tile_renderer.dart`.
-  2. Run the test to verify it fails and harvest the `Behind-Camera Render Violation` exceptions.
-  3. Restore the check in `globe_tile_renderer.dart`.
-  4. Re-run the tests to confirm they pass cleanly.
-
+- The Markdown file is created at the correct location.
+- All Mermaid syntax blocks compile successfully.
+- No syntax issues or formatting drifts are present.
+- All changes staged, committed, and pushed to `origin/main`.
+- `git diff origin/main` is completely empty.
