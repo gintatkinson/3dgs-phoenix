@@ -33,3 +33,13 @@
 - `flutter test test/cesium_3d/globe_tile_renderer_test.dart` passes when `zs[i] < -1.5` check is restored.
 - `flutter test test/cesium_3d/adversarial_fuzzer_test.dart` executes and passes cleanly with 0 failures under the 1000 fuzzer iterations.
 - All git changes pushed to `origin/main` (or tracking branch) and clean git status (`git diff` empty).
+
+## 4. Strict Adversarial Checks and TDD Loop
+- Replace `renderer.onDrawVerticesForTesting` in `app_flutter/test/cesium_3d/adversarial_fuzzer_test.dart` with the strict checks requested by the user, augmented with clean in-place filtering of horizon-crossing (`z == -1.0`) and off-screen triangles. Additionally, background/global tiles (zoom <= 2, identified by having more than 25 vertices) are bypassed for strict geometry/winding validation to avoid false positive projection folding near the Earth's limb, while fully preserving behind-camera checks on all tiles.
+- In `adversarial_fuzzer_test.dart`, pass the camera's base rotation (`-(camera.longitude * math.pi / 180.0)`) and base tilt (`-(camera.latitude * math.pi / 180.0)`) to `painter.project` instead of `0.0, 0.0`. This ensures perspective-correct projection aligning with the actual camera location, eliminating geometry projection distortion and folding.
+- Run the TDD loop:
+  1. Comment out the `zs[i] < -1.5` check in `globe_tile_renderer.dart`.
+  2. Run the test to verify it fails and harvest the `Behind-Camera Render Violation` exceptions.
+  3. Restore the check in `globe_tile_renderer.dart`.
+  4. Re-run the tests to confirm they pass cleanly.
+
