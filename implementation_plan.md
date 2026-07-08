@@ -1,18 +1,22 @@
-# Implementation Plan - Epic 3: GPU Bridge Header Alignment
+# Implementation Plan - Epic 4: WebAssembly Component Model Extensibility Linter Fixes
 
 ## 1. Objectives
-- Fix linter violations in `/Users/perkunas/jail/3dgs-phoenix/docs/epics/epic-03-gpu-bridge.md`.
-- Ensure all other file layouts and headers remain intact.
-- Verify changes, commit them, and push them to origin/main.
+- Fix Mermaid class diagram linter violations in `/Users/perkunas/jail/3dgs-phoenix/docs/epics/epic-04-wasm-extensibility.md`.
+- Change attribute syntax of all classes from `-name : type` to standard UML format without colons: `visibility type name [multiplicity]`.
+- Change realization connector `..|>` to generalization connector `<|--` under relationships section.
 
 ## 2. File Modifications
 
-### `docs/epics/epic-03-gpu-bridge.md`
-- Rename the header `## 8. Source References` to exactly `## 6. Source References`.
-- Rename the header `## 6. State Machine Definitions` to exactly `## State Machine Definitions`.
-- Rename the header `## 7. Specification Context` to exactly `## Specification Context`.
+### `docs/epics/epic-04-wasm-extensibility.md`
+- Replace attributes:
+  - `-engine : String [1]` with `-String engine [1]`
+  - `-linker : String [1]` with `-String linker [1]`
+  - `-loadedPlugins : PluginInstance [0..*]` with `-PluginInstance loadedPlugins [0..*]`
+  - `-engine : WasmtimeEngine [1]` with `-WasmtimeEngine engine [1]`
+- Replace connector:
+  - `BillingPlugin ..|> WitInterface` with `WitInterface <|-- BillingPlugin`
 
 ## 3. Success / Verification Criteria
-- `docs/epics/epic-03-gpu-bridge.md` contains the corrected headers.
-- All other headers and content in the file remain intact.
-- `git diff origin/main` is clean after pushing the committed changes.
+- `docs/epics/epic-04-wasm-extensibility.md` renders correctly.
+- All modifications are cleanly staged, committed, and pushed to origin/main.
+- `git diff origin/main` shows no changes.
