@@ -3,6 +3,7 @@ title: "WIT Bindgen data streaming type validation"
 type: "user-story"
 spec_source: "Project Constitution"
 generation_mode: "subagent"
+epic: "Epic 4: WebAssembly Component Model Extensibility Epic"
 ---
 
 # User Story US-50-4: WIT Bindgen data streaming type validation

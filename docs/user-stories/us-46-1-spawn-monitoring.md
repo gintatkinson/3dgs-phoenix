@@ -3,6 +3,7 @@ title: "Headless Unreal Daemon Orchestration & Spawn Monitoring"
 type: "user-story"
 spec_source: "Project Constitution"
 generation_mode: "subagent"
+epic: "Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 ---
 
 # User Story US-46-1: Headless Unreal Daemon Orchestration & Spawn Monitoring

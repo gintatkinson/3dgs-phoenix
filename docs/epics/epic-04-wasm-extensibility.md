@@ -20,6 +20,11 @@ This Epic governs the sandboxed execution subsystem of the 3DGS Phoenix platform
 None identified at this time.
 
 #### Associated User Stories
+- [ ] #263 - [Wasmtime Engine Initialization and Cranelift JIT Configuration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-1-jit-init.md) (semantic linkage justification)
+- [ ] #264 - [WASI Filesystem Sandboxing and Capability Allocation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-2-fs-sandbox.md) (semantic linkage justification)
+- [ ] #265 - [WASI Network Capability Isolation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-3-net-sandbox.md) (semantic linkage justification)
+- [ ] #266 - [WIT Bindgen data streaming type validation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-4-wit-validation.md) (semantic linkage justification)
+- [ ] #267 - [Asynchronous FFI batching queue execution](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-5-ffi-batching.md) (semantic linkage justification)
 None identified at this time.
 
 ## 3. Architecture

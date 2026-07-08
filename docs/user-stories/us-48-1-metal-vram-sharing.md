@@ -3,6 +3,7 @@ title: "macOS Metal/IOSurface VRAM Sharing"
 type: "user-story"
 spec_source: "Project Constitution"
 generation_mode: "subagent"
+epic: "Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 ---
 
 # User Story US-48-1: macOS Metal/IOSurface VRAM Sharing

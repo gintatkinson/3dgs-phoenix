@@ -3,6 +3,7 @@ title: "Linux Vulkan External Memory VRAM Sharing"
 type: "user-story"
 spec_source: "Project Constitution"
 generation_mode: "subagent"
+epic: "Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 ---
 
 # User Story US-49-1: Linux Vulkan External Memory VRAM Sharing

@@ -3,6 +3,7 @@ title: "macOS Dock Icon Supression Compliance"
 type: "user-story"
 spec_source: "Project Constitution"
 generation_mode: "subagent"
+epic: "Epic 2: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic"
 ---
 
 # User Story US-45-3: macOS Dock Icon Supression Compliance
