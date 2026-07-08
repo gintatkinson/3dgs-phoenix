@@ -360,14 +360,18 @@ class GlobeTileRenderer {
           final int i3 = i2 + 1;
 
           // Triangle 1: (i0, i1, i2)
-          if (zs[i0] >= 0.0 || zs[i1] >= 0.0 || zs[i2] >= 0.0) {
+          if (zs[i0] < -1.5 || zs[i1] < -1.5 || zs[i2] < -1.5) {
+            // Discard
+          } else if (zs[i0] >= 0.0 || zs[i1] >= 0.0 || zs[i2] >= 0.0) {
             indices.add(i0);
             indices.add(i1);
             indices.add(i2);
           }
 
           // Triangle 2: (i1, i3, i2)
-          if (zs[i1] >= 0.0 || zs[i3] >= 0.0 || zs[i2] >= 0.0) {
+          if (zs[i1] < -1.5 || zs[i3] < -1.5 || zs[i2] < -1.5) {
+            // Discard
+          } else if (zs[i1] >= 0.0 || zs[i3] >= 0.0 || zs[i2] >= 0.0) {
             indices.add(i1);
             indices.add(i3);
             indices.add(i2);

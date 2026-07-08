@@ -303,5 +303,61 @@ void main() {
       // Assert distance from projectedCenter is close to projectedRadius (within 1e-4 tolerance)
       expect(actualDistance, closeTo(projectedRadius, 1e-4));
     });
+
+    test('Test 5 (Scenario 6 - Discard triangles crossing behind camera)', () async {
+      final fetcher = TileFetcher();
+      int loadedCount = 0;
+      final completer = Completer<void>();
+
+      final renderer = GlobeTileRenderer(
+        fetcher: fetcher,
+        onTileLoaded: () {
+          loadedCount++;
+          if (loadedCount >= 16 && !completer.isCompleted) {
+            completer.complete();
+          }
+        },
+      );
+
+      final camera = VirtualCamera(
+        latitude: 0.0,
+        longitude: 0.0,
+        altitude: 10000000.0,
+        heading: 0.0,
+        pitch: 0.0,
+        roll: 0.0,
+      );
+
+      renderer.beginTileFetch(camera, const ui.Size(800, 600));
+      await completer.future;
+
+      final canvas = FakeCanvas();
+      int callCount = 0;
+
+      renderer.renderTiles(
+        canvas,
+        camera,
+        const ui.Size(800, 600),
+        ui.Offset.zero,
+        1000.0,
+        (lat, lng) {
+          final pt = ProjectedPoint(ui.Offset.zero, callCount == 0 ? 1.0 : -100.0);
+          callCount++;
+          return pt;
+        },
+      );
+
+      // Without the fix, triangles containing visible vertex (index 0) are drawn, so drawVerticesCount > 0.
+      // With the fix, all triangles containing behind-camera vertices (z < -1.5) are discarded, so drawVerticesCount == 0.
+      expect(canvas.drawVerticesCount, equals(0));
+    });
   });
+}
+
+class FakeCanvas extends Fake implements ui.Canvas {
+  int drawVerticesCount = 0;
+  @override
+  void drawVertices(ui.Vertices vertices, ui.BlendMode blendMode, ui.Paint paint) {
+    drawVerticesCount++;
+  }
 }

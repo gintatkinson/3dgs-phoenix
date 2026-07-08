@@ -1227,7 +1227,14 @@ class Scene3DViewportPainter extends CustomPainter {
     final double rx_pixel = x_cam * pScale;
     final double ry_pixel = y_cam * pScale;
 
-    final double depthVal = isCulled ? -1.0 : depth;
+    final double depthVal;
+    if (depth <= 0.0) {
+      depthVal = -100.0;
+    } else if (isCulled) {
+      depthVal = -1.0;
+    } else {
+      depthVal = depth;
+    }
     final Offset projectedOffset = Offset(center.dx + rx_pixel, center.dy - ry_pixel);
 
     return ProjectedPoint(projectedOffset, depthVal);
