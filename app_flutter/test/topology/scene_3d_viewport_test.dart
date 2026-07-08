@@ -207,8 +207,8 @@ void main() {
       );
 
       // Check that the projected coordinates are safe and do not explode to huge values (e.g. > 100k pixels)
-      expect(proj.offset.dx.abs(), lessThan(100000.0));
-      expect(proj.offset.dy.abs(), lessThan(100000.0));
+      expect(proj.offset.dx.abs(), lessThan(5000.0));
+      expect(proj.offset.dy.abs(), lessThan(5000.0));
     });
   });
 

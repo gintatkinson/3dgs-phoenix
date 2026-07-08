@@ -47,9 +47,9 @@
       viewportSize,
     );
 
-    // Check that the projected coordinates are safe and do not explode to huge values (e.g. > 100k pixels)
-    expect(proj.offset.dx.abs(), lessThan(100000.0));
-    expect(proj.offset.dy.abs(), lessThan(100000.0));
+    // Check that the projected coordinates are safe and do not explode to huge values (e.g. > 5k pixels)
+    expect(proj.offset.dx.abs(), lessThan(5000.0));
+    expect(proj.offset.dy.abs(), lessThan(5000.0));
   });
   ```
 
@@ -77,7 +77,7 @@
     ```
 
 ## 3. Success / Verification Criteria
-- Run target tests in `app_flutter` to ensure the new test fails initially, and then passes after the fix is applied:
-  `flutter test test/topology/scene_3d_viewport_test.dart test/features/topology/globe_rendering_benchmark_test.dart`
+- Run target tests in `app_flutter` to ensure the updated test passes:
+  `flutter test test/topology/scene_3d_viewport_test.dart`
 - Stage, commit, and push the changes to remote tracking branch `origin/main`.
 - Verify `git diff origin/main` is empty.
