@@ -49,15 +49,15 @@ Under this architecture, the headless Unreal Engine process renders 3D graphics 
 ```
 
 ## 2. Requirements & Checklist
-- [ ] #251 - Feature 2.1: Headless Unreal Engine Orchestration (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-03-headless-unreal-orchestration.md) (Launches offscreen Unreal process via -RenderOffscreen flag and monitors its PID)
-- [ ] #252 - Feature 2.2: Windows DXGI Interop (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-04-windows-dxgi-interop.md) (Maps Unreal DX12/Vulkan texture exports to kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle)
-- [ ] #253 - Feature 2.3: macOS IOSurface Interop (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-05-macos-iosurface-interop.md) (Integrates IOSurfaceRef with MTLStorageModeShared backing CVPixelBuffer on Apple Silicon)
-- [ ] #254 - Feature 2.4: Linux Vulkan Interop (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-06-linux-vulkan-interop.md) (Exposes Vulkan textures using VK_KHR_external_memory_fd and sends FDs over UDS)
+- [ ] [#251 - Feature 2.1: Headless Unreal Engine Orchestration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-03-headless-unreal-orchestration.md) (Launches offscreen Unreal process via -RenderOffscreen flag and monitors its PID)
+- [ ] [#252 - Feature 2.2: Windows DXGI Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-04-windows-dxgi-interop.md) (Maps Unreal DX12/Vulkan texture exports to kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle)
+- [ ] [#253 - Feature 2.3: macOS IOSurface Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-05-macos-iosurface-interop.md) (Integrates IOSurfaceRef with MTLStorageModeShared backing CVPixelBuffer on Apple Silicon)
+- [ ] [#254 - Feature 2.4: Linux Vulkan Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-06-linux-vulkan-interop.md) (Exposes Vulkan textures using VK_KHR_external_memory_fd and sends FDs over UDS)
 
 ### Associated Use Cases & User Stories
 
 #### Associated Use Cases
-- [ ] #UC-3 - Handling an Unreal Engine Rendering Crash and seamless hot-swap (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-03-rendering-crash-recovery.md) (Handles headless daemon crashes, freezes UI frame, and swaps new texture references dynamically)
+- [ ] [#UC-3 - Handling an Unreal Engine Rendering Crash and seamless hot-swap](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-03-rendering-crash-recovery.md) (Handles headless daemon crashes, freezes UI frame, and swaps new texture references dynamically)
 
 ##### Detailed Use Case: UC-3 (Handling Unreal Engine Rendering Crash)
 * **Actors:** `Global App Coordinator` (Dart/Flutter), `Scene Delegates` (Dart/Flutter), `Headless Rendering Daemon` (C++/Unreal Engine)
@@ -146,59 +146,57 @@ Under this architecture, the headless Unreal Engine process renders 3D graphics 
 ## 3. Architecture and System Interaction Diagrams
 
 ### Subsystem Component Definition
-The `GPUBridgeSubsystem` represents the subsystem coordinating the lifecycle of the headless Unreal engine process and importing its shared textures into the Flutter composition queue.
-```mermaid
-classDiagram
-    class GPUBridgeSubsystem {
-        <<component>>
-        +initializeBridge() : Boolean
-        +registerSharedTexture(type : String, handle : String) : Integer
-        +updateTextureFrame(textureId : Integer) : Boolean
-        +handleRenderCrash() : Boolean
-    }
-```
+The `GPUBridgeSubsystem` represents the subsystem coordinating the lifecycle of the headless Unreal engine process and importing its shared textures into the Flutter composition queue. It exposes the following interface methods:
+- `initializeBridge() : Boolean [1]`: Prepares the native graphics interop bridge and listens on the local IPC socket.
+- `registerSharedTexture(type : String, handle : String) : Integer [1]`: Imports a shared GPU texture handle and registers it with the Flutter texture registry, returning a unique texture ID.
+- `updateTextureFrame(textureId : Integer) : Boolean [1]`: Triggers a redraw/sampling of the registered texture handle inside Flutter's paint loop.
+- `handleRenderCrash() : Boolean [1]`: Executes recovery protocols, freeing stale texture handles and invoking process respawn.
 
 ### System-Level UML Class Diagram
 ```mermaid
 classDiagram
     class GPUBridgeSubsystem {
         <<component>>
+        +initializeBridge() : Boolean [1]
+        +registerSharedTexture(type : String, handle : String) : Integer [1]
+        +updateTextureFrame(textureId : Integer) : Boolean [1]
+        +handleRenderCrash() : Boolean [1]
     }
     class AppCoordinator {
-        +Boolean isProcessHealthy
-        +Integer activeTextureId
-        +spawnRenderer(flags : String) : Boolean
-        +monitorProcess() : Boolean
-        +recoverFromCrash() : Boolean
+        +isProcessHealthy : Boolean [1]
+        +activeTextureId : Integer [1]
+        +spawnRenderer(flags : String) : Boolean [1]
+        +monitorProcess() : Boolean [1]
+        +recoverFromCrash() : Boolean [1]
     }
     class HeadlessUnrealProcess {
-        +Integer processId
-        +String commandLineFlags
-        +launchProcess() : Boolean
-        +killProcess() : Boolean
+        +processId : Integer [1]
+        +commandLineFlags : String [1]
+        +launchProcess() : Boolean [1]
+        +killProcess() : Boolean [1]
     }
     class GraphicsInteropBridge {
-        +String platformName
-        +registerHandle(handle : String) : Boolean
-        +releaseHandle() : Boolean
+        +platformName : String [1]
+        +registerHandle(handle : String) : Boolean [1]
+        +releaseHandle() : Boolean [1]
     }
     class DXGIGraphicsInterop {
-        +String dxgiSharedHandle
-        +registerSharedHandle() : Boolean
+        +dxgiSharedHandle : String [1]
+        +registerSharedHandle() : Boolean [1]
     }
     class IOSurfaceGraphicsInterop {
-        +String ioSurfaceRef
-        +Boolean isAppleSilicon
-        +registerIOSurface() : Boolean
+        +ioSurfaceRef : String [1]
+        +isAppleSilicon : Boolean [1]
+        +registerIOSurface() : Boolean [1]
     }
     class VulkanGraphicsInterop {
-        +Integer fileDescriptor
-        +registerExternalMemoryFd() : Boolean
+        +fileDescriptor : Integer [1]
+        +registerExternalMemoryFd() : Boolean [1]
     }
     class FlutterTextureRegistrar {
-        +Integer registerExternalTexture(handle : String) : Integer
-        +updateExternalTexture(textureId : Integer, handle : String) : Boolean
-        +unregisterExternalTexture(textureId : Integer) : Boolean
+        +registerExternalTexture(handle : String) : Integer [1]
+        +updateExternalTexture(textureId : Integer, handle : String) : Boolean [1]
+        +unregisterExternalTexture(textureId : Integer) : Boolean [1]
     }
 
     GPUBridgeSubsystem "1" *-- "1" AppCoordinator
@@ -210,7 +208,13 @@ classDiagram
     GraphicsInteropBridge <|-- VulkanGraphicsInterop
 ```
 
-## 4. State Machine Definitions
+## 4. Operational Considerations
+This section details the operational aspects of the zero-copy GPU texture bridge, including the management of the GPU texture handle lifecycle, active monitoring of local IPC socket connections, and structured error and crash logging for the headless Unreal Engine daemon.
+
+## 5. Security & Governance
+This section defines the security posture and governance requirements, specifying the minimum process privileges for the headless daemon, and ensuring sandboxed handle isolation to prevent cross-process memory leakage or unauthorized handle access.
+
+## 6. State Machine Definitions
 
 ### System State Machine Diagram
 The state machine below defines the operational lifecycles of the zero-copy GPU texture bridge and the offscreen Unreal daemon process.
@@ -227,7 +231,7 @@ stateDiagram-v2
     ActiveRendering --> Stopped : StopDaemon
 ```
 
-## 5. Specification Context
+## 7. Specification Context
 The following text is injected verbatim from the system's core architectural guidelines (`docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md`):
 
 ```
@@ -251,6 +255,6 @@ The following use case context is also injected verbatim:
 * Outcome: The Coordinator logs the error, reboots the Unreal Engine daemon, requests a fresh DXGI/IOSurface handle, and hot-swaps the new memory address into the active Flutter Texture widget seamlessly.
 ```
 
-## 6. Source References
+## 8. Source References
 Structural Schema: `app_flutter/assets/logical-layout.json`
 Normative Specification: [Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md](file:///Users/perkunas/jail/3dgs-phoenix/docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md)

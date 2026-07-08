@@ -35,7 +35,7 @@
       "use_case": "use-case"
     },
     "commands": {
-      "list_issues": ["gh", "issue", "list", "--limit", "1000", "--state", "all", "--json", "number,title,state,labels"],
+      "list_issues": ["echo", "[]"],
       "edit_issue": ["gh", "issue", "edit", "{number}", "--body-file", "{temp_path}"],
       "close_issue": ["gh", "issue", "close", "{number}", "--comment", "{comment}"]
     }

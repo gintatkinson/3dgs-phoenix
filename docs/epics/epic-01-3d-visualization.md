@@ -21,8 +21,6 @@ The 3D Visualization Epic aggregates high-performance native rendering pipelines
 None identified at this time.
 
 #### Associated User Stories
-None identified at this time.
-
 ## 3. Architecture and System Interaction Diagrams
 
 ### Subsystem Component Definition
