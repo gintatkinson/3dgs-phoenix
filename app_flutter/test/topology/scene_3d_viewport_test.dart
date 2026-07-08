@@ -167,6 +167,49 @@ void main() {
 
       expect(distanceToProjectedCenter, closeTo(expectedProjectedRadiusTilted, 1e-4));
     });
+
+    test('Near-plane coordinates do not explode for vertices behind camera', () {
+      final camera = VirtualCamera.clamped(
+        latitude: 35.0,
+        longitude: 135.0,
+        altitude: 200000.0, // 200 km altitude
+        heading: 0,
+        pitch: -23, // tilted view
+        roll: 0,
+      );
+
+      final painter = Scene3DViewportPainter(
+        camera: camera,
+        activeStyle: 'dark',
+        astronomicalBody: 'Earth',
+        elevationActive: true,
+        showDevices: true,
+        showLinks: true,
+        showLabels: true,
+        showDropLines: true,
+        userRotationX: 0.0,
+        userTilt: 0.0,
+        zoomScale: 1.0,
+      );
+
+      const Size viewportSize = Size(800, 600);
+      const Offset viewportCenter = Offset(400.0, 300.0);
+
+      // Project a point that is behind the camera plane
+      final proj = painter.project(
+        0.5, // 30 degrees latitude
+        2.3, // 131 degrees longitude
+        6378137.0, // surface
+        viewportCenter,
+        0.0,
+        0.0,
+        viewportSize,
+      );
+
+      // Check that the projected coordinates are safe and do not explode to huge values (e.g. > 100k pixels)
+      expect(proj.offset.dx.abs(), lessThan(100000.0));
+      expect(proj.offset.dy.abs(), lessThan(100000.0));
+    });
   });
 
   group('Feature 02: 3D Terrain Elevation and Node Altitude', () {
