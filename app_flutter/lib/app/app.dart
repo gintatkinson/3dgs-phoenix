@@ -6,9 +6,12 @@ import 'package:app_flutter/core/theme/app_themes.dart';
 import 'package:app_flutter/core/theme/text_scaler.dart';
 import 'package:app_flutter/core/theme/theme_controller.dart';
 import 'package:app_flutter/features/layout/layout.dart';
+import 'package:app_flutter/features/topology/scene_view_widget.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? sceneId;
+
+  const MyApp({super.key, this.sceneId});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,7 @@ class MyApp extends StatelessWidget {
           child: child!,
         );
       },
-      home: const DashboardPage(),
+      home: sceneId != null ? SceneViewWidget(sceneId: sceneId!) : const DashboardPage(),
     );
   }
 }

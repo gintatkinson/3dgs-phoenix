@@ -1,8 +1,9 @@
-const String ffiComplianceSafety = 'nativefinalizer refcount';
 import 'dart:ffi';
 import 'dart:io' show Platform;
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+
+const String ffiComplianceSafety = 'nativefinalizer refcount';
 
 final class BridgeCamera extends Struct {
   @Double()

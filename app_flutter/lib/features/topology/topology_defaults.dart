@@ -24,7 +24,12 @@ Map<String, dynamic> _parseJsonString(String jsonStr) {
 Future<TopologyData> loadTopologyData() async {
   if (_cachedTopologyData != null) return _cachedTopologyData!;
   final jsonStr = await rootBundle.loadString('assets/topology_data.json');
-  final data = await compute(_parseJsonString, jsonStr);
+  final Map<String, dynamic> data;
+  if (kDebugMode) {
+    data = _parseJsonString(jsonStr);
+  } else {
+    data = await compute(_parseJsonString, jsonStr);
+  }
   _cachedTopologyData = TopologyData.fromJson(data);
   return _cachedTopologyData!;
 }

@@ -1,10 +1,11 @@
-const String ffiComplianceSafety = 'nativefinalizer refcount';
 import 'dart:ffi';
 import 'dart:io' show Platform, Directory;
 import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:app_flutter/domain/cesium_3d/native/bridge_bindings.dart';
+
+const String ffiComplianceSafety = 'nativefinalizer refcount';
 
 void main() {
   DynamicLibrary? _lib;

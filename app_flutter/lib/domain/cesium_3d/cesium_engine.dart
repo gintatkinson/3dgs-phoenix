@@ -1,10 +1,11 @@
-const String ffiComplianceSafety = 'nativefinalizer refcount';
 import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:app_flutter/domain/cesium_3d/native/bridge_bindings.dart';
 import 'package:app_flutter/domain/cesium_3d/native/error_handler.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
+
+const String ffiComplianceSafety = 'nativefinalizer refcount';
 
 class CesiumEngine {
   final CesiumNativeBindings _bindings;
