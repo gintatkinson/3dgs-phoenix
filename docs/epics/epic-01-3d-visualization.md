@@ -12,8 +12,8 @@ issue_id: 243
 The 3D Visualization Epic aggregates high-performance native rendering pipelines required to establish a native, single-process desktop 3D network topology visualization. By interfacing the C++ spatial logic library `cesium-native` (via Dart FFI) with Flutter's low-level `flutter_gpu` and high-level `flutter_scene` libraries, the subsystem renders global-scale photorealistic tilesets and logical microwave line-of-sight (LoS) links directly in the Flutter viewport without embedded webviews or multi-process sharing mechanisms.
 
 ## 2. Requirements & Checklist
-- [ ] #239 - Feature 01: Native Desktop 3D Network Visualization (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-01-native-3d-network-visualization.md) (Aggregates high-performance native rendering pipelines)
-- [ ] #245 - Feature 02: 3D Terrain Elevation and Node Altitude Modeling (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-02-3d-terrain-elevation-and-node-altitude-modeling.md) (Renders dynamic terrain and ground altitudes)
+- [ ] #239 - [Feature 01: Native Desktop 3D Network Visualization](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-01-native-3d-network-visualization.md) (Aggregates high-performance native rendering pipelines)
+- [ ] #245 - [Feature 02: 3D Terrain Elevation and Node Altitude Modeling](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-02-3d-terrain-elevation-and-node-altitude-modeling.md) (Renders dynamic terrain and ground altitudes)
 
 ### Associated Use Cases & User Stories
 
@@ -21,7 +21,7 @@ The 3D Visualization Epic aggregates high-performance native rendering pipelines
 None identified at this time.
 
 #### Associated User Stories
-## 3. Architecture and System Interaction Diagrams
+## 3. Architecture
 
 ### Subsystem Component Definition
 Define the subsystem representing the Epic as a UML Component specifying provided/required interfaces and operations.
@@ -32,6 +32,15 @@ classDiagram
         +renderScene() : Boolean [1]
         +fetchSpatialTiles() : String [1]
     }
+    class Cesium3DNative {
+        +initializeTileset(sourceUrl : String) Boolean [1]
+    }
+    class Scene3DViewport {
+        +VirtualCamera camera [1]
+        +initializeScene() Boolean [1]
+    }
+    Visualization3DSubsystem *-- Cesium3DNative
+    Visualization3DSubsystem *-- Scene3DViewport
 ```
 
 ## System-Level UML Class Diagram
@@ -75,8 +84,6 @@ classDiagram
     Cesium3DNative o-- CoordinateTransformer
 ```
 
-## 4. State Machine Definitions
-
 ## System State Machine Diagram
 ```mermaid
 stateDiagram-v2
@@ -90,8 +97,11 @@ stateDiagram-v2
     ErrorState --> Initializing : Reset
 ```
 
-## 5. Specification Context
-The 3D Visualization Epic serves as the primary container for spatial, geographical, and topographical representation within the 3DGS Phoenix workspace. The scope spans the low-level FFI C++ bridge bindings up to the high-level Flutter interface widgets (`TopographicalView`) that display nodes, microwave links, elevation profiles, and 3D tiles.
+## 4. Operational Considerations
+To achieve stable 60 FPS rendering rates, the 3D visualization engine leverages zero-copy native VRAM buffer sharing. Buffers must be allocated dynamically with appropriate dimensions matching the active Flutter Texture size. The system must support hot-swapping memory handles on the fly if the rendering pipeline crashes.
+
+## 5. Security & Governance
+FFI bindings into C++ cesium-native must validate memory bounds to prevent buffer overflows or memory leaks in the Flutter runner process. Native textures and shared handles must only be shared with authorized helper processes in the parent-child hierarchy.
 
 ## 6. Source References
 Structural Schema: `app_flutter/assets/logical-layout.json`

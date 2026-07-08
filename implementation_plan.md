@@ -20,6 +20,13 @@ This plan details the deconstruction of Epics 2, 3, and 4 into individual Use Ca
   - Create Feature `docs/features/feat-50-wasm-extensibility.md`.
   - Link Feature 50 in Epic 4 checklists and remove embedded specifications.
 - Ensure all diagrams adhere strictly to `.pipeline/logical-ui/codebase_rules.json` constraints (Mermaid sequence diagrams for user stories, class diagrams for features, use-case stadium shapes and undirected actor links for use cases, state diagrams for use cases and epics).
+- Update `docs/epics/epic-01-3d-visualization.md` to resolve UML and pipeline compliance linter failures:
+  - Format checklist items under `## 2. Requirements & Checklist` as proper markdown links.
+  - Update the class diagram under `### Subsystem Component Definition`.
+  - Rename `## 3. Architecture and System Interaction Diagrams` to `## 3. Architecture`.
+  - Remove `## 4. State Machine Definitions` and place `## System State Machine Diagram` directly under `## 3. Architecture`.
+  - Remove `## 5. Specification Context` to align with the standard 6-section structure of other Epics.
+  - Add `## 4. Operational Considerations` and `## 5. Security & Governance` sections before `## 6. Source References`.
 - Reconcile the backlog with GitHub Issues and push to the remote repository.
 
 ## 2. File Creation and Modifications
@@ -48,6 +55,7 @@ This plan details the deconstruction of Epics 2, 3, and 4 into individual Use Ca
 - `docs/features/feat-50-wasm-extensibility.md`
 
 ### Modified Files
+- `docs/epics/epic-01-3d-visualization.md`
 - `docs/epics/epic-02-scene-lifecycle.md`
 - `docs/epics/epic-03-gpu-bridge.md`
 - `docs/epics/epic-04-wasm-extensibility.md`
