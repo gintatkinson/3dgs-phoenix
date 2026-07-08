@@ -18,16 +18,21 @@ This feature provides macOS IOSurface texture VRAM interop for zero-copy frame s
 ## UML Class Diagram
 ```mermaid
 classDiagram
-    class MacosIoSurfaceBridge {
+    class Renderer {
+        <<component>>
+    }
+    class MacIosurfaceBridge {
         +createIoSurface(width : Integer, height : Integer) Integer [1]
         +bindMetalTexture(surfaceRef : Integer) Boolean [1]
     }
     class CvPixelBufferInfo {
         +Integer storageMode [1]
         +Boolean isIoSurfaceBacked [1]
+        +configure() Void [1]
     }
 
-    MacosIoSurfaceBridge --> CvPixelBufferInfo : configures
+    Renderer --> MacIosurfaceBridge : uses
+    MacIosurfaceBridge --> CvPixelBufferInfo : configures
 ```
 
 ## Interface Requirements

@@ -32,10 +32,12 @@ classDiagram
         +marshalRecord(data : String) ByteArray [1]
     }
     class AsynchronousBatcher {
-        +batchQueue : StringArray [1]
+        +String batchQueue [1]
         +enqueueCommand(cmd : String) Boolean [1]
+        +flushBatch() Void [1]
     }
 
+    Coordinator --> WasmtimeEngine : initializes
     WasmtimeEngine --> WasiConfigurator : configures
     WasmtimeEngine --> WitMarshaller : uses
     WasmtimeEngine --> AsynchronousBatcher : batches commands with

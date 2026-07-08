@@ -12,7 +12,7 @@ epic: "Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 - [ ] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)
 
 ## Domain Object Mapping
-- **Primary Domain Objects:** MacosIoSurfaceBridge, CvPixelBufferInfo
+- **Primary Domain Objects:** MacIosurfaceBridge, CvPixelBufferInfo
 - **Actor/Role:** renderer : Renderer (Offscreen Metal rendering process)
 
 ## BDD Scenario (OOA/OOD Realization)
@@ -25,7 +25,7 @@ epic: "Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 sequenceDiagram
     autonumber
     actor renderer as "renderer : Renderer"
-    participant bridge as "bridge : MacosIoSurfaceBridge"
+    participant bridge as "bridge : MacIosurfaceBridge"
     participant info as "info : CvPixelBufferInfo"
 
     renderer->>bridge: createIoSurface(width: Integer, height: Integer)

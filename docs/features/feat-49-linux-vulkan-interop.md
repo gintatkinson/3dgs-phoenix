@@ -18,14 +18,19 @@ This feature provides Linux Vulkan external memory interop for zero-copy frame s
 ## UML Class Diagram
 ```mermaid
 classDiagram
+    class Renderer {
+        <<component>>
+    }
     class LinuxVulkanBridge {
         +exportMemoryFd() Integer [1]
         +importMemoryFd(fd : Integer) Boolean [1]
     }
     class VulkanExternalMemory {
         +String extensionName [1]
+        +uses() Void [1]
     }
 
+    Renderer --> LinuxVulkanBridge : uses
     LinuxVulkanBridge --> VulkanExternalMemory : uses
 ```
 

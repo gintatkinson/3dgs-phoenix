@@ -30,6 +30,7 @@ classDiagram
         +watchExitCode() Integer [1]
     }
 
+    Coordinator --> UnrealDaemonManager : manages
     UnrealDaemonManager *-- ProcessWatcher : monitors via
 ```
 

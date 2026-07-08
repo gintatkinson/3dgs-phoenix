@@ -18,6 +18,9 @@ This feature provides Windows DXGI shared handle VRAM interop for zero-copy fram
 ## UML Class Diagram
 ```mermaid
 classDiagram
+    class Renderer {
+        <<component>>
+    }
     class WindowsDxgiBridge {
         +createSharedHandle(width : Integer, height : Integer) Integer [1]
         +registerDxgiSurface(handle : Integer) Boolean [1]
@@ -27,6 +30,7 @@ classDiagram
         +bindSharedSurface(handle : Integer) Boolean [1]
     }
 
+    Renderer --> WindowsDxgiBridge : uses
     WindowsDxgiBridge --> FlutterWindowsEmbedder : registers handle with
 ```
 

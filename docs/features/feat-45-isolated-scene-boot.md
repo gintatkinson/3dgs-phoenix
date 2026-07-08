@@ -36,6 +36,7 @@ classDiagram
         +connect() Boolean [1]
     }
 
+    Coordinator --> SceneBootstrapper : calls
     SceneBootstrapper --> SceneViewWidget : instantiates
     SceneBootstrapper --> ProcessExecutor : spawns
     SceneBootstrapper --> GrpcChannel : connects
