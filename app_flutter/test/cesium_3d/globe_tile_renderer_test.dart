@@ -11,6 +11,7 @@ import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
 import 'package:app_flutter/features/topology/scene_3d_viewport.dart';
 import 'package:app_flutter/features/topology/topology_map.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'mesh_geometry_validator.dart';
 
 class MockTileFetcher extends TileFetcher {
   @override
@@ -350,6 +351,101 @@ void main() {
       // Without the fix, triangles containing visible vertex (index 0) are drawn, so drawVerticesCount > 0.
       // With the fix, all triangles containing behind-camera vertices (z < -1.5) are discarded, so drawVerticesCount == 0.
       expect(canvas.drawVerticesCount, equals(0));
+    });
+
+    test('Test 6 (Scenario 7 - Mesh geometry distortion validation sweep)', () async {
+      final fetcher = TileFetcher()..disable();
+      final renderer = GlobeTileRenderer(fetcher: fetcher);
+
+      final latitudes = [-35.0, 0.0, 35.3606];
+      final longitudes = [-135.0, 0.0, 138.7274];
+      final altitudes = [25000.0, 500000.0, 2000000.0];
+      final pitches = [-90.0, -45.0, -15.0];
+
+      for (final lat in latitudes) {
+        for (final lng in longitudes) {
+          for (final alt in altitudes) {
+            for (final pitch in pitches) {
+              final camera = VirtualCamera.clamped(
+                latitude: lat,
+                longitude: lng,
+                altitude: alt,
+                heading: 0.0,
+                pitch: pitch,
+                roll: 0.0,
+              );
+
+              final painter = Scene3DViewportPainter(
+                camera: camera,
+                activeStyle: 'dark',
+                astronomicalBody: 'Earth',
+                elevationActive: true,
+                showDevices: true,
+                showLinks: true,
+                showLabels: true,
+                showDropLines: true,
+                userRotationX: 0.0,
+                userTilt: 0.0,
+                zoomScale: 1.0,
+              );
+
+              const ui.Size size = ui.Size(800, 600);
+              const ui.Offset center = ui.Offset(400.0, 300.0);
+              final List<ui.Offset> positions = [];
+              final List<double> zs = [];
+
+              // 9x9 grid
+              for (int r = 0; r <= 8; r++) {
+                final double latOffset = (r - 4) * 0.1;
+                for (int c = 0; c <= 8; c++) {
+                  final double lngOffset = (c - 4) * 0.1;
+                  final double vLat = (camera.latitude + latOffset) * math.pi / 180.0;
+                  final double vLng = (camera.longitude + lngOffset) * math.pi / 180.0;
+                  final double height = 6378137.0 + painter.getElevation(camera.latitude + latOffset, camera.longitude + lngOffset) * 80.0;
+
+                  final proj = painter.project(vLat, vLng, height, center, 0.0, 0.0, size);
+                  positions.add(proj.offset);
+                  zs.add(proj.z);
+                }
+              }
+
+              final List<int> indices = [];
+              for (int r = 0; r < 8; r++) {
+                for (int c = 0; c < 8; c++) {
+                  final int i0 = r * 9 + c;
+                  final int i1 = i0 + 1;
+                  final int i2 = (r + 1) * 9 + c;
+                  final int i3 = i2 + 1;
+
+                  // Triangle 1: (i0, i1, i2)
+                  if (zs[i0] < -1.5 || zs[i1] < -1.5 || zs[i2] < -1.5) {
+                    // Discard
+                  } else if (zs[i0] >= 0.0 || zs[i1] >= 0.0 || zs[i2] >= 0.0) {
+                    indices.add(i0);
+                    indices.add(i1);
+                    indices.add(i2);
+                  }
+
+                  // Triangle 2: (i1, i3, i2)
+                  if (zs[i1] < -1.5 || zs[i3] < -1.5 || zs[i2] < -1.5) {
+                    // Discard
+                  } else if (zs[i1] >= 0.0 || zs[i3] >= 0.0 || zs[i2] >= 0.0) {
+                    indices.add(i1);
+                    indices.add(i3);
+                    indices.add(i2);
+                  }
+                }
+              }
+
+              try {
+                MeshGeometryValidator.validate(positions: positions, indices: indices);
+              } catch (e) {
+                fail('Distortion detected at Cam: lat=$lat, lng=$lng, alt=$alt, pitch=$pitch. Error: $e');
+              }
+            }
+          }
+        }
+      }
     });
   });
 }
