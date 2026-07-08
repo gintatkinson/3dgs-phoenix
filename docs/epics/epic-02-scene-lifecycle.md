@@ -3,7 +3,7 @@ title: "Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic"
 type: "epic"
 generation_mode: "subagent"
 spec_source: "Project Constitution"
-issue_id: 244
+issue_id: 247
 ---
 
 # Epic: Platform-Agnostic Scene-Based Lifecycle (Windowing)

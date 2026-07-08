@@ -3,6 +3,7 @@ title: "Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 type: "epic"
 generation_mode: "subagent"
 spec_source: "Project Constitution"
+issue_id: 248
 ---
 
 # Epic: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)

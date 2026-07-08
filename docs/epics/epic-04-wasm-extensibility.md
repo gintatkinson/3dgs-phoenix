@@ -3,7 +3,7 @@ title: "WebAssembly Component Model Extensibility Epic"
 type: "epic"
 spec_source: "Architecture Specification"
 generation_mode: "subagent"
-issue_id: 247
+issue_id: 249
 ---
 
 # Epic: WebAssembly Component Model Extensibility
@@ -22,6 +22,12 @@ Rather than relying on legacy, unsafe shared libraries (`.dll`, `.dylib`, `.so`)
 ## 2. Requirements & Checklist
 
 ### Associated Use Cases & User Stories
+
+#### Associated Use Cases
+
+#### Associated User Stories
+
+### Use Cases
 
 #### Use Case UC-2: Loading a Third-Party Billing Plugin
 
@@ -44,7 +50,7 @@ Rather than relying on legacy, unsafe shared libraries (`.dll`, `.dylib`, `.so`)
   2. The plugin has zero access to host environment variables or directories outside the designated sandbox.
   3. The host process remains isolated from any plugin memory safety issues.
 
-#### User Stories
+### User Stories
 
 ##### US-4.1.1: Runtime initialization with Cranelift JIT
 **As an** Application Administrator,  
