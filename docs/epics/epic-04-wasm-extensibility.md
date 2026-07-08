@@ -191,8 +191,8 @@ This section details the security model protecting the host system from untruste
 ```mermaid
 classDiagram
     class WasmtimeEngine {
-        -engine : String [1]
-        -linker : String [1]
+        -String engine [1]
+        -String linker [1]
         +initialize(enableJit : Boolean) : Boolean [1]
         +newStore(wasiCtx : String) : String [1]
     }
@@ -202,8 +202,8 @@ classDiagram
         +buildWasiContext() : String [1]
     }
     class PluginManager {
-        -loadedPlugins : PluginInstance [0..*]
-        -engine : WasmtimeEngine [1]
+        -PluginInstance loadedPlugins [0..*]
+        -WasmtimeEngine engine [1]
         +loadPlugin(path : String, config : WasiSandboxConfig) : String [1]
         +unloadPlugin(id : String) : Boolean [1]
         +getPlugin(id : String) : PluginInstance [1]
@@ -227,7 +227,7 @@ classDiagram
     PluginManager o-- WasiSandboxConfig
     PluginManager o-- "0..*" PluginInstance : manages
     PluginInstance o-- WitInterface
-    BillingPlugin ..|> WitInterface
+    WitInterface <|-- BillingPlugin
 ```
 
 ---

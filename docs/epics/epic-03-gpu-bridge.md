@@ -214,7 +214,7 @@ This section details the operational aspects of the zero-copy GPU texture bridge
 ## 5. Security & Governance
 This section defines the security posture and governance requirements, specifying the minimum process privileges for the headless daemon, and ensuring sandboxed handle isolation to prevent cross-process memory leakage or unauthorized handle access.
 
-## 6. State Machine Definitions
+## State Machine Definitions
 
 ### System State Machine Diagram
 The state machine below defines the operational lifecycles of the zero-copy GPU texture bridge and the offscreen Unreal daemon process.
@@ -231,7 +231,7 @@ stateDiagram-v2
     ActiveRendering --> Stopped : StopDaemon
 ```
 
-## 7. Specification Context
+## Specification Context
 The following text is injected verbatim from the system's core architectural guidelines (`docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md`):
 
 ```
@@ -255,6 +255,6 @@ The following use case context is also injected verbatim:
 * Outcome: The Coordinator logs the error, reboots the Unreal Engine daemon, requests a fresh DXGI/IOSurface handle, and hot-swaps the new memory address into the active Flutter Texture widget seamlessly.
 ```
 
-## 8. Source References
+## 6. Source References
 Structural Schema: `app_flutter/assets/logical-layout.json`
 Normative Specification: [Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md](file:///Users/perkunas/jail/3dgs-phoenix/docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md)
