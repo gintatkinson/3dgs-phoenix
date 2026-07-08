@@ -20,6 +20,7 @@ This Epic governs the zero-copy, hardware-accelerated 3D graphics texture bridge
 ### Associated Use Cases & User Stories
 
 #### Associated Use Cases
+- [ ] #269 - [UC-3: Handling an Unreal Engine Rendering Crash and seamless hot-swap](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-46-rendering-crash-recovery.md) (semantic linkage justification)
 None identified at this time.
 
 #### Associated User Stories

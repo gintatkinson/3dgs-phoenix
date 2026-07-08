@@ -17,6 +17,7 @@ This Epic governs the windowing and process lifecycle management of the 3DGS Pho
 ### Associated Use Cases & User Stories
 
 #### Associated Use Cases
+- [ ] #268 - [UC-1: Opening a Multi-Node Topology View](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-45-open-multi-node.md) (semantic linkage justification)
 None identified at this time.
 
 #### Associated User Stories

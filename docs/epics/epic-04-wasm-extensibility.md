@@ -17,6 +17,7 @@ This Epic governs the sandboxed execution subsystem of the 3DGS Phoenix platform
 ### Associated Use Cases & User Stories
 
 #### Associated Use Cases
+- [ ] #270 - [UC-2: Loading a Third-Party Wasm Billing Plugin](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-50-load-billing-plugin.md) (semantic linkage justification)
 None identified at this time.
 
 #### Associated User Stories
