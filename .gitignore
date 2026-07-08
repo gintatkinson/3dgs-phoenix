@@ -13,3 +13,12 @@ scratch/
 *define*.json
 config.json
 benchmark_results.jsonl
+
+# Unreal Engine intermediate directories
+app_unreal/Binaries/
+app_unreal/Intermediate/
+app_unreal/Saved/
+app_unreal/DerivedDataCache/
+app_unreal/Build/
+app_unreal/*.xcworkspace
+app_unreal/*.sln
