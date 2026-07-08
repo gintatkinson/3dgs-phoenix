@@ -7,7 +7,7 @@ spec_source: "Project Constitution"
 issue_id: 251
 ---
 
-# Feature 46: Headless Unreal Daemon Orchestration
+# Feature 46: Headless Unreal Daemon Orchestration (Issue #251)
 
 ## Parent Epic
 - [ ] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)

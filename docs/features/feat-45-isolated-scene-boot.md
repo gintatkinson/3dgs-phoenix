@@ -7,7 +7,7 @@ spec_source: "Project Constitution"
 issue_id: 250
 ---
 
-# Feature 45: Isolated Scene Boot
+# Feature 45: Isolated Scene Boot (Issue #250)
 
 ## Parent Epic
 - [ ] #247 - [Epic 1: Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-01-scene-lifecycle.md) (Aggregates multi-process windowing logic)

@@ -7,7 +7,7 @@ spec_source: "Project Constitution"
 issue_id: 255
 ---
 
-# Feature 50: Wasm Extensibility Subsystem
+# Feature 50: Wasm Extensibility Subsystem (Issue #255)
 
 ## Parent Epic
 - [ ] #249 - [Epic 4: WebAssembly Component Model Extensibility Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-04-wasm-extensibility.md) (Aggregates Wasmtime integration and WIT component interfaces)

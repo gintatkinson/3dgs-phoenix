@@ -7,7 +7,7 @@ spec_source: "Project Constitution"
 issue_id: 253
 ---
 
-# Feature 48: macOS IOSurface Texture Interop
+# Feature 48: macOS IOSurface Texture Interop (Issue #253)
 
 ## Parent Epic
 - [ ] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)

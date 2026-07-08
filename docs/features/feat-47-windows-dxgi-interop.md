@@ -7,7 +7,7 @@ spec_source: "Project Constitution"
 issue_id: 252
 ---
 
-# Feature 47: Windows DXGI Texture Interop
+# Feature 47: Windows DXGI Texture Interop (Issue #252)
 
 ## Parent Epic
 - [ ] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)
