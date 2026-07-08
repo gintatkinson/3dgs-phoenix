@@ -1,28 +1,32 @@
-# Implementation Plan - UML Graphics and WASM Extensibility Design Spec
+# Implementation Plan - Platform-Agnostic Scene-Based Lifecycle (Windowing) Epic
+
+This plan details the creation of the Epic specification document for Epic 1: Platform-Agnostic Scene-Based Lifecycle (Windowing).
 
 ## 1. Objectives
-- Draft the UML design specification document `docs/designs/uml-graphics-and-wasm-extensibility.md`.
-- Ensure the document contains:
-  1. Architectural System Overview of the multi-process, Hub-and-Spoke platform.
-  2. OMG UML 2.5.1 compliant Mermaid diagrams (Component, Sequence - Render Loop, Sequence - Wasm Plugin Async Event Loop, Deployment).
-  3. Traceability Matrix mapping design components to the architectural requirements.
-- Verify correctness of Mermaid diagrams and document structure.
-- Stage and commit the document, ensuring `git diff origin/main` matches exactly the added file.
+- Draft the epic specification document `docs/epics/epic-02-scene-lifecycle.md` for Epic 1: Platform-Agnostic Scene-Based Lifecycle (Windowing).
+- Ensure the document details the windowing architecture using multi-engine isolation, the separation between the Global App Coordinator and the Scene Delegates, Requirements 1.1, 1.2, and 1.3, Use Case UC-1, granular User Stories with Given-When-Then BDD acceptance criteria, and OMG UML 2.5.1 compliant Mermaid diagrams (Component, Class, State Machine).
+- Reference the cross-platform rendering and WebAssembly architecture specification.
+- Verify that the git status is clean and that `git diff origin/main` is empty after committing and pushing the changes.
 
 ## 2. File Modifications
 
-### `docs/designs/uml-graphics-and-wasm-extensibility.md` (Create)
-- Section 1: Architectural System Overview (Hub-and-Spoke topology, process segregation, zero-copy VRAM texture bridges, Native Lite mode, and WASM sandbox).
-- Section 2: Detailed OMG UML 2.5.1 Compliant Mermaid Diagrams:
-  - **Component Diagram**: Port-based interfaces (gRPC over UDS, FFI, DXGI/IOSurface zero-copy handles) for Coordinator, Scene Delegates, Headless Unreal (Cesium), Wasmtime container, and cesium-native FFI.
-  - **Sequence Diagram (Render Loop)**: Frame tick, camera coordinate passing over FFI, cesium-native tile selection/culling, local Cartesian conversion (ECEF translation), glTF mesh generation, and Impeller (flutter_gpu/flutter_scene) drawing.
-  - **Sequence Diagram (Wasm Plugin Async Event Loop)**: Coordinator event queue, JIT compilation bounds (wasmtime), asynchronous WIT boundary crossing (wit-bindgen, Rust), WASI directory/file sandbox access, and async yielding.
-  - **Deployment Diagram**: Mapping Workstation Host nodes to executable/library binaries (`.app`/`.exe`, `.dylib`/`.so`/`.dll`, Unreal binaries, and `.wasm` modules).
-- Section 3: Traceability Matrix mapping these components to the requirements in `docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md`.
+### `docs/epics/epic-02-scene-lifecycle.md` (Create)
+- **Metadata**: YAML frontmatter (title, type, generation_mode, spec_source, issue_id).
+- **Section 1: Context**: Describe the windowing architecture using multi-engine isolation and process/fault segregation.
+- **Section 2: Requirements & Checklist**: Detailed mapping of Requirements 1.1, 1.2, and 1.3.
+- **Section 3: Use Cases**: Detailed specification of UC-1 (Opening a Multi-Node Topology View).
+- **Section 4: User Stories**: User Stories (US-1, US-2, US-3) with Given-When-Then acceptance criteria mapping to the requirements.
+- **Section 5: UML Diagrams**:
+  - Component Diagram (Global Coordinator, Scene processes, UDS/gRPC connections, Info.plist).
+  - Class Diagram (`SceneLifecycleManager`, `ProcessSpawner`, `CommandLineParser`, `SceneViewWidget`, `GrpcUdsChannel`).
+  - State Machine Diagram (Lifecycle states of scene processes: Spawned -> Parsing Args -> Booting Scene -> Establishing UDS Link -> Active / Communicating -> Closed / Terminated).
+- **Section 6: Source References**: List references, including the original architectural specification file.
+
+### `implementation_plan.md` (Modify)
+- Overwrite with the current implementation plan for this task.
 
 ## 3. Success / Verification Criteria
-- The Markdown file is created at the correct location.
-- All Mermaid syntax blocks compile successfully.
-- The Traceability Matrix correctly references requirements 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.4.
-- Git status is clean (or has only the new untracked file), and changes are committed and pushed to `origin/main`.
-- `git diff origin/main` is empty after push.
+- File `docs/epics/epic-02-scene-lifecycle.md` is successfully created.
+- Mermaid diagrams parse correctly.
+- Git status is clean and changes are committed and pushed to `origin/main`.
+- `git diff origin/main` is empty.
