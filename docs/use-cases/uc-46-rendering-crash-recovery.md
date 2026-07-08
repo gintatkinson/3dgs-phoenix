@@ -12,21 +12,23 @@ generation_mode: "subagent"
 ### Use Case Diagram
 ```mermaid
 flowchart TD
-    Coordinator("Global App Coordinator")
-    Daemon("Unreal Engine Daemon")
+    CoordinatorActor(("Global App Coordinator Actor"))
+    DaemonActor(("Unreal Engine Daemon Actor"))
 
-    UC1("([Monitor Offscreen Renderer])")
-    UC2("([Recover from Rendering Crash])")
-    UC3("([Hot-swap GPU Texture])")
-    UC4("([Render 3D Tiles Offscreen])")
+    subgraph SystemBoundary["System Boundary"]
+        UC1(["Monitor Offscreen Renderer"])
+        UC2(["Recover from Rendering Crash"])
+        UC3(["Hot-swap GPU Texture"])
+        UC4(["Render 3D Tiles Offscreen"])
+    end
 
-    Coordinator --- UC1
-    Coordinator --- UC2
-    Coordinator --- UC3
-    Daemon --- UC4
+    CoordinatorActor --- UC1
+    CoordinatorActor --- UC2
+    CoordinatorActor --- UC3
+    DaemonActor --- UC4
 
-    UC2 -.->|"<<include>>"| UC1
-    UC2 -.->|"<<include>>"| UC3
+    UC2 -. "<<include>>" .-> UC1
+    UC2 -. "<<include>>" .-> UC3
 ```
 
 ### State Machine Diagram

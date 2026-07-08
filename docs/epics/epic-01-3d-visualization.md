@@ -13,7 +13,7 @@ The 3D Visualization Epic aggregates high-performance native rendering pipelines
 
 ## 2. Requirements & Checklist
 - [ ] #239 - [Feature 01: Native Desktop 3D Network Visualization](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-01-native-3d-network-visualization.md) (Aggregates high-performance native rendering pipelines)
-- [ ] #245 - [Feature 02: 3D Terrain Elevation and Node Altitude Modeling](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-02-3d-terrain-elevation-and-node-altitude-modeling.md) (Renders dynamic terrain and ground altitudes)
+- [x] #245 - [Feature 02: 3D Terrain Elevation and Node Altitude Modeling](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-02-3d-terrain-elevation-and-node-altitude-modeling.md) (Renders dynamic terrain and ground altitudes)
 
 ### Associated Use Cases & User Stories
 
@@ -36,7 +36,6 @@ classDiagram
         +initializeTileset(sourceUrl : String) Boolean [1]
     }
     class Scene3DViewport {
-        +VirtualCamera camera [1]
         +initializeScene() Boolean [1]
     }
     Visualization3DSubsystem *-- Cesium3DNative

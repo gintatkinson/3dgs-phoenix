@@ -12,22 +12,24 @@ generation_mode: "subagent"
 ### Use Case Diagram
 ```mermaid
 flowchart TD
-    User("User / Operator")
-    Coordinator("Global App Coordinator")
+    UserActor(("User / Operator Actor"))
+    CoordinatorActor(("Global App Coordinator Actor"))
 
-    UC_Open("([UC-1: Opening a Multi-Node Topology View])")
-    UC_Parse("([Parse `--scene` parameter])")
-    UC_Spawn("([Spawn isolated scene process])")
-    UC_UDS("([Establish UDS connection])")
+    subgraph SystemBoundary["System Boundary"]
+        UC_Open(["UC-1: Opening a Multi-Node Topology View"])
+        UC_Parse(["Parse `--scene` parameter"])
+        UC_Spawn(["Spawn isolated scene process"])
+        UC_UDS(["Establish UDS connection"])
+    end
 
-    User --- UC_Open
-    Coordinator --- UC_Parse
-    Coordinator --- UC_Spawn
-    Coordinator --- UC_UDS
+    UserActor --- UC_Open
+    CoordinatorActor --- UC_Parse
+    CoordinatorActor --- UC_Spawn
+    CoordinatorActor --- UC_UDS
 
-    UC_Open -.->|"<<include>>"| UC_Parse
-    UC_Open -.->|"<<include>>"| UC_Spawn
-    UC_Open -.->|"<<include>>"| UC_UDS
+    UC_Open -. "<<include>>" .-> UC_Parse
+    UC_Open -. "<<include>>" .-> UC_Spawn
+    UC_Open -. "<<include>>" .-> UC_UDS
 ```
 
 ### State Machine Diagram

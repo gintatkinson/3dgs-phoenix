@@ -12,22 +12,24 @@ generation_mode: "subagent"
 ### Use Case Diagram
 ```mermaid
 flowchart TD
-    User("User / Operator")
-    Coordinator("Global App Coordinator")
+    UserActor(("User / Operator Actor"))
+    CoordinatorActor(("Global App Coordinator Actor"))
 
-    UC_Load("([UC-2: Load Billing Plugin])")
-    UC_Validate("([Validate WIT Signature])")
-    UC_Sandbox("([Configure WASI Sandbox])")
-    UC_Execute("([Execute Calculations])")
-    UC_Display("([Display Billing Results])")
+    subgraph SystemBoundary["System Boundary"]
+        UC_Load(["UC-2: Load Billing Plugin"])
+        UC_Validate(["Validate WIT Signature"])
+        UC_Sandbox(["Configure WASI Sandbox"])
+        UC_Execute(["Execute Calculations"])
+        UC_Display(["Display Billing Results"])
+    end
 
-    User --- UC_Load
-    Coordinator --- UC_Load
+    UserActor --- UC_Load
+    CoordinatorActor --- UC_Load
 
-    UC_Load -.->|"<<include>>"| UC_Validate
-    UC_Load -.->|"<<include>>"| UC_Sandbox
-    UC_Load -.->|"<<include>>"| UC_Execute
-    UC_Load -.->|"<<include>>"| UC_Display
+    UC_Load -. "<<include>>" .-> UC_Validate
+    UC_Load -. "<<include>>" .-> UC_Sandbox
+    UC_Load -. "<<include>>" .-> UC_Execute
+    UC_Load -. "<<include>>" .-> UC_Display
 ```
 
 ### State Transition Diagram
@@ -71,26 +73,23 @@ stateDiagram-v2
 6. The Coordinator displays the billing results on the Dart UI (TableView widget).
 
 ## 5. Alternate and Exception Flows
-
-### 5a. JIT validation fails (Branches from Basic Flow step 2)
-1. Coordinator detects that the module fails JIT compilation or standard validation.
-2. Coordinator halts the loading, logs the validation exception, and aborts instantiation.
-- **State Guarantee:** The system state remains unmodified; resources are cleaned up, and execution is aborted before instantiation.
-
-### 5b. Filesystem sandbox violation detected (Branches from Basic Flow step 5)
-1. WASI environment detects that the plugin is attempting to read or write files outside `/tmp/billing_db` (`WasiSandboxViolation`).
-2. WASI blocks the file access, logs the sandbox breach, and terminates the execution.
-- **State Guarantee:** File accesses outside `/tmp/billing_db` are blocked, preventing illegal read/write operations; execution is halted.
-
-### 5c. Network sandbox violation detected (Branches from Basic Flow step 5)
-1. WASI environment detects that the plugin is attempting to create a network connection (`WasiSandboxViolation` due to `allowNetwork: false`).
-2. WASI blocks the socket call, logs the network access breach, and terminates execution.
-- **State Guarantee:** Network connection request is denied; execution is halted, preventing outgoing sockets or leaks.
-
-### 5d. WIT interface signature mismatch (Branches from Basic Flow step 2)
-1. Coordinator detects that the loaded plugin exports/imports do not match the expected `.wit` signature (`WitInterfaceMismatch`).
-2. Coordinator rejects the plugin, raises a loading error, and notifies the User.
-- **State Guarantee:** Loaded module is rejected, and resources are released, leaving the state unaltered.
+- **5a. JIT validation fails (Branches from Basic Flow step 2):**
+  1. Coordinator detects that the module fails JIT compilation or standard validation.
+  2. Coordinator halts the loading, logs the validation exception, and aborts instantiation.
+  - **State Guarantee:** The system state remains unmodified; resources are cleaned up, and execution is aborted before instantiation.
+- **5b. Filesystem sandbox violation detected (Branches from Basic Flow step 5):**
+  1. WASI environment detects that the plugin is attempting to read or write files outside `/tmp/billing_db` (`WasiSandboxViolation`).
+  2. WASI blocks the file access, logs the sandbox breach, and terminates the execution.
+  - **State Guarantee:** File accesses outside `/tmp/billing_db` are blocked, preventing illegal read/write operations; execution is halted.
+- **5c. Network sandbox violation detected (Branches from Basic Flow step 5):**
+  1. WASI environment detects that the plugin is attempting to create a network connection (`WasiSandboxViolation` due to `allowNetwork: false`).
+  2. WASI blocks the socket call, logs the network access breach, and terminates execution.
+  - **State Guarantee:** Network connection request is denied; execution is halted, preventing outgoing sockets or leaks.
+- **5d. WIT interface signature mismatch (Branches from Basic Flow step 2):**
+  1. Coordinator parses the plugin's WIT interface exports and imports.
+  2. Coordinator detects a mismatch with the pre-defined host interface signatures.
+  3. Coordinator rejects the plugin, raises a loading error, and notifies the User.
+  - **State Guarantee:** Loaded module is rejected, and resources are released, leaving the state unaltered.
 
 ## 6. Postconditions
 - **Success Guarantee:** The billing plugin executes successfully in a secure sandbox, returning safe results to the UI without accessing host OS APIs directly.
