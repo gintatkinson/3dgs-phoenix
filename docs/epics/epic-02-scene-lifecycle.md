@@ -20,15 +20,16 @@ This multi-process separation provides absolute fault segregation. Because each 
 ---
 
 ## 2. Requirements & Checklist
-- [ ] **Requirement 1.1 (Process Spawning & main(args))**: The Global App Coordinator must parse command-line arguments in `main(List<String> args)` to dynamically determine the execution role. If `--scene=[id]` is provided, the engine must bypass the main coordinator UI and boot directly into a highly isolated `SceneViewWidget()` lifecycle.
-- [ ] **Requirement 1.2 (Fault Segregation & gRPC UDS)**: Active scene sub-processes must communicate with the Global Coordinator exclusively via local gRPC over Unix Domain Sockets (UDS) or named pipes (on Windows). If an Impeller shader or native rendering context faults in Scene A, OS-level process isolation must guarantee that the Global Coordinator and Scene B remain fully active and unaffected.
-- [ ] **Requirement 1.3 (macOS LSUIElement Compliance)**: When launching scene sub-processes on macOS, the processes must be executed as helper binaries with the `LSUIElement` key set to `true` in their `Info.plist` configuration. This prevents redundant dock icons and menu bars from appearing for helper windows, maintaining native macOS platform compliance.
 
----
+### Associated Use Cases & User Stories
 
-## 3. Use Cases
+#### Associated Use Cases
 
-### Use Case UC-1: Opening a Multi-Node Topology View
+#### Associated User Stories
+
+### Use Cases
+
+#### Use Case UC-1: Opening a Multi-Node Topology View
 
 *   **Actors**: User, Global Coordinator, Scene Delegate, 3D Renderer (Lite Mode / Enterprise Mode)
 *   **Trigger**: The user selects a complex optical ring in the visual topology view and clicks "Open in 3D Viewer".
@@ -50,9 +51,9 @@ This multi-process separation provides absolute fault segregation. Because each 
 
 ---
 
-## 4. User Stories
+### User Stories
 
-### US-1: Command-line Argument Parsing for Isolated Scene Boots
+#### US-1: Command-line Argument Parsing for Isolated Scene Boots
 **As a** System Spawner Daemon,  
 **I want** the application entry point to parse command-line arguments and detect `--scene=[id]`,  
 **So that** I can boot the Flutter engine directly into an isolated scene delegate view instead of loading the main UI.
@@ -66,7 +67,7 @@ This multi-process separation provides absolute fault segregation. Because each 
     *   **When** no `--scene` argument is passed,
     *   **Then** the application must fall back to booting the standard Global App Coordinator view.
 
-### US-2: gRPC UDS Inter-Process Communication & Fault Segregation
+#### US-2: gRPC UDS Inter-Process Communication & Fault Segregation
 **As a** Core Platform Architect,  
 **I want** scene sub-processes to communicate with the coordinator over gRPC Unix Domain Sockets (UDS) in complete isolation,  
 **So that** any critical graphics driver or shader panic in a scene process does not crash the global coordinator.
@@ -80,7 +81,7 @@ This multi-process separation provides absolute fault segregation. Because each 
     *   **Then** the OS must terminate the Scene Delegate process.
     *   **And** the Global Coordinator must remain running, catch the child process exit event, clean up the socket connection, and update the UI status without crashing.
 
-### US-3: macOS Dock Icon Suppression (LSUIElement)
+#### US-3: macOS Dock Icon Suppression (LSUIElement)
 **As a** macOS Desktop User,  
 **I want** helper scene processes to open without creating redundant Dock icons or menu bars,  
 **So that** my system Dock remains clean and complies with native macOS windowing behaviors.
@@ -94,7 +95,7 @@ This multi-process separation provides absolute fault segregation. Because each 
 
 ---
 
-## 5. UML Diagrams
+## 3. Architecture
 
 ### Component Diagram
 
@@ -135,50 +136,129 @@ The following diagram defines the classes responsible for parsing parameters, sp
 ```mermaid
 classDiagram
     class SceneLifecycleManager {
-        -List~SceneDelegate~ activeScenes
-        -ProcessSpawner spawner
-        +spawnScene(sceneId: String, targetId: String) Future~SceneDelegate~
-        +terminateScene(sceneId: String) Future~void~
-        +handleSceneFault(sceneId: String) void
+        -SceneDelegate activeScenes [0..*]
+        -ProcessSpawner spawner [1]
+        +spawnScene(sceneId: String, targetId: String) SceneDelegate [1]
+        +terminateScene(sceneId: String) Boolean [1]
+        +handleSceneFault(sceneId: String) Boolean [1]
+    }
+
+    class SceneDelegate {
+        +String sceneId [1]
+        +Integer processId [1]
     }
 
     class ProcessSpawner {
-        +startProcess(executable: String, args: List~String~) Future~Process~
+        +startProcess(executable: String, args: List~String~) Boolean [1]
     }
 
     class CommandLineParser {
-        +parse(args: List~String~) CommandLineArgs
+        +parse(args: List~String~) CommandLineArgs [1]
     }
 
     class CommandLineArgs {
-        +String? sceneId
-        +String? targetId
-        +Boolean isSceneView
+        +String sceneId [0..1]
+        +String targetId [0..1]
+        +Boolean isSceneView [1]
     }
 
     class SceneViewWidget {
-        +String sceneId
-        -GrpcUdsChannel udsChannel
-        +initState() void
-        +build(context: BuildContext) Widget
+        +String sceneId [1]
+        -GrpcUdsChannel udsChannel [1]
+        +initState() Boolean [1]
+        +build(context: BuildContext) Boolean [1]
     }
 
     class GrpcUdsChannel {
-        -String socketPath
-        +connect() Future~void~
-        +send(payload: String) Future~void~
-        +receive() Stream~String~
+        -String socketPath [1]
+        +connect() Boolean [1]
+        +send(payload: String) Boolean [1]
+        +receive() Boolean [0..*]
     }
 
     SceneLifecycleManager o-- ProcessSpawner
+    SceneLifecycleManager "1" o-- "0..*" SceneDelegate : manages
+    SceneLifecycleManager --> CommandLineParser : invokes
     SceneLifecycleManager --> GrpcUdsChannel : manages
     CommandLineParser --> CommandLineArgs : produces
     SceneViewWidget o-- GrpcUdsChannel
 ```
 
-### State Machine Diagram
+---
 
-The lifecycle of an isolated scene delegate process.
+## 4. Operational Considerations
+The Global App Coordinator monitors the lifecycle of all spawned Scene Delegate subprocesses. If a subprocess crashes or exits unexpectedly, the coordinator logs the event, updates telemetry statistics (including exit codes and crash frequency), and performs automated recovery by restarting the failed process and restoring the scene state.
+
+---
+
+## 5. Security & Governance
+To enforce strict security boundaries, each Scene Delegate runs in a dedicated, isolated OS-level process with restricted permissions. Communication between the coordinator and delegates is conducted over local gRPC Unix Domain Sockets (UDS), securing inter-process communication without exposing network ports and ensuring socket file credentials are restricted via standard OS-level file permissions.
+
+---
+
+## 6. Source References
+- Architectural Specification: [Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md](file:///Users/perkunas/jail/3dgs-phoenix/docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md)
+- macOS Info.plist Keys: [Apple Developer Documentation - LSUIElement](https://developer.apple.com/documentation/bundleresources/information_property_list/lsuielement)
+- gRPC Dart & Unix Domain Sockets: [gRPC Dart packages on pub.dev](https://pub.dev/packages/grpc)
+
+---
+
+## System-Level UML Class Diagram
+
+```mermaid
+classDiagram
+    class SceneLifecycleManager {
+        -SceneDelegate activeScenes [0..*]
+        -ProcessSpawner spawner [1]
+        +spawnScene(sceneId: String, targetId: String) SceneDelegate [1]
+        +terminateScene(sceneId: String) Boolean [1]
+        +handleSceneFault(sceneId: String) Boolean [1]
+    }
+
+    class SceneDelegate {
+        +String sceneId [1]
+        +Integer processId [1]
+    }
+
+    class ProcessSpawner {
+        +startProcess(executable: String, args: List~String~) Boolean [1]
+    }
+
+    class CommandLineParser {
+        +parse(args: List~String~) CommandLineArgs [1]
+    }
+
+    class CommandLineArgs {
+        +String sceneId [0..1]
+        +String targetId [0..1]
+        +Boolean isSceneView [1]
+    }
+
+    class SceneViewWidget {
+        +String sceneId [1]
+        -GrpcUdsChannel udsChannel [1]
+        +initState() Boolean [1]
+        +build(context: BuildContext) Boolean [1]
+    }
+
+    class GrpcUdsChannel {
+        -String socketPath [1]
+        +connect() Boolean [1]
+        +send(payload: String) Boolean [1]
+        +receive() Boolean [0..*]
+    }
+
+    SceneLifecycleManager o-- ProcessSpawner
+    SceneLifecycleManager "1" o-- "0..*" SceneDelegate : manages
+    SceneLifecycleManager --> CommandLineParser : invokes
+    SceneLifecycleManager --> GrpcUdsChannel : manages
+    CommandLineParser --> CommandLineArgs : produces
+    SceneViewWidget o-- GrpcUdsChannel
+```
+
+---
+
+## System State Machine Diagram
 
 ```mermaid
 stateDiagram-v2
@@ -194,10 +274,3 @@ stateDiagram-v2
     ActiveCommunicating --> Terminated : Shader Fault / Process Crash
     Terminated --> [*]
 ```
-
----
-
-## 6. Source References
-- Architectural Specification: [Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md](file:///Users/perkunas/jail/3dgs-phoenix/docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md)
-- macOS Info.plist Keys: [Apple Developer Documentation - LSUIElement](https://developer.apple.com/documentation/bundleresources/information_property_list/lsuielement)
-- gRPC Dart & Unix Domain Sockets: [gRPC Dart packages on pub.dev](https://pub.dev/packages/grpc)
