@@ -1,4 +1,4 @@
-# Implementation Plan: Unreal Target Configuration and Project Compilation
+# Implementation Plan: 3DGS Phoenix Integration Roadmap
 
 This plan covers editing the Unreal Target configuration files to use an override build environment and compiling the C++ project.
 
