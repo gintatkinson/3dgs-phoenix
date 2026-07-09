@@ -12,7 +12,7 @@ issue_id: 243
 The 3D Visualization Epic aggregates high-performance native rendering pipelines required to establish a native, single-process desktop 3D network topology visualization. By interfacing the C++ spatial logic library `cesium-native` (via Dart FFI) with Flutter's low-level `flutter_gpu` and high-level `flutter_scene` libraries, the subsystem renders global-scale photorealistic tilesets and logical microwave line-of-sight (LoS) links directly in the Flutter viewport without embedded webviews or multi-process sharing mechanisms.
 
 ## 2. Requirements & Checklist
-- [ ] #239 - [Feature 01: Native Desktop 3D Network Visualization](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-01-native-3d-network-visualization.md) (Aggregates high-performance native rendering pipelines)
+- [x] #239 - [Feature 01: Native Desktop 3D Network Visualization](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-01-native-3d-network-visualization.md) (Aggregates high-performance native rendering pipelines)
 - [x] #245 - [Feature 02: 3D Terrain Elevation and Node Altitude Modeling](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-02-3d-terrain-elevation-and-node-altitude-modeling.md) (Renders dynamic terrain and ground altitudes)
 
 ### Associated Use Cases & User Stories
