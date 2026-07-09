@@ -70,3 +70,36 @@ This plan covers editing the Unreal Target configuration files to use an overrid
 3. Verify `INSTALL.md` is correctly formatted.
 4. Push all changes to remote and verify `git diff origin/main` is empty.
 
+
+## Phase 3: Visual GPU Shared Texture Viewport Integration
+
+### Proposed Changes
+
+#### Component 1: Native macOS Runner Plugin (Swift)
+
+##### [NEW] [MacIosurfaceTexturePlugin.swift](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/macos/Runner/MacIosurfaceTexturePlugin.swift)
+- Implement `FlutterPlugin` and `FlutterTexture` protocols.
+- Register a texture with `FlutterViewController.engine.textureRegistry` to obtain a `textureId`.
+- Expose a MethodChannel `3dgs.phoenix/texture_bridge` to receive frame update commands containing the `ioSurfaceRef` pointer value.
+- Wrap the shared `ioSurfaceRef` in a CoreVideo `CVPixelBuffer` backing, bind it to a Metal `MTLTexture`, and push it into the texture registry.
+
+##### [MODIFY] [MainFlutterWindow.swift](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/macos/Runner/MainFlutterWindow.swift)
+- Instantiate and register `MacIosurfaceTexturePlugin` with the main window's `FlutterViewController`.
+
+#### Component 2: Flutter FFI & Viewport Integration (Dart)
+
+##### [NEW] [mac_iosurface_texture_controller.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/domain/cesium_3d/native/mac_iosurface_texture_controller.dart)
+- Expose a MethodChannel interface to request texture registration from the native plugin.
+- Forward frame render notifications with the `ioSurfaceRef` pointer value to update the texture buffer.
+
+##### [MODIFY] [scene_3d_viewport.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/features/topology/scene_3d_viewport.dart)
+- Instantiate `MacIosurfaceTextureController` during initialization.
+- Update the widget's `build` tree to display `Texture(textureId: id)` instead of the CustomPaint canvas when the stream is active.
+
+---
+
+## Verification Plan for GPU Shared Texture Viewport
+1. Compile and build the macOS application.
+2. Verify the 3D Viewport renders the shared GPU texture stream from the active background Unreal daemon process.
+
+
