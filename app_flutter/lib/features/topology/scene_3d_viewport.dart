@@ -52,6 +52,12 @@ class Scene3DViewportState extends State<Scene3DViewport> {
   Future<void> _initTexture() async {
     await _textureController.initialize();
     if (mounted) {
+      _textureController.updateCamera(
+        _cameraController.current.latitude,
+        _cameraController.current.longitude,
+        _cameraController.current.heading,
+        _cameraController.current.pitch,
+      );
       setState(() {});
     }
   }
@@ -230,6 +236,12 @@ class Scene3DViewportState extends State<Scene3DViewport> {
   void _onCameraChangedInside() {
     if (mounted && !_isUpdatingWidget) {
       setState(() {});
+      _textureController.updateCamera(
+        _cameraController.current.latitude,
+        _cameraController.current.longitude,
+        _cameraController.current.heading,
+        _cameraController.current.pitch,
+      );
       widget.onCameraChanged?.call(_cameraController.current);
     }
   }

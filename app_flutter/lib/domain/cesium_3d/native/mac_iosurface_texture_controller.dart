@@ -30,4 +30,19 @@ class MacIosurfaceTextureController {
       print('Failed to update frame: $e');
     }
   }
+
+  /// Sends a camera update to orient the offscreen 3D globe visualization.
+  Future<void> updateCamera(double latitude, double longitude, double heading, double pitch) async {
+    if (_textureId == null) return;
+    try {
+      await _channel.invokeMethod('updateCamera', {
+        'latitude': latitude,
+        'longitude': longitude,
+        'heading': heading,
+        'pitch': pitch,
+      });
+    } catch (e) {
+      print('Failed to update camera: $e');
+    }
+  }
 }
