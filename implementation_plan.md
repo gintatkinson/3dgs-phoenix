@@ -1,50 +1,45 @@
-# Implementation Plan: Feature 47 (Windows DXGI Texture Interop)
+# Implementation Plan: Feature 49 (Linux Vulkan External Memory Interop)
 
-This feature implements the Windows DXGI Texture Interop bridge classes and verification tests.
+This feature implements the Linux Vulkan External Memory Interop bridge classes and verification tests.
 
 ## Proposed Changes
 
 ### Component: Domain & Native Bridge
 
-#### [NEW] [windows_dxgi_bridge.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/domain/cesium_3d/native/windows_dxgi_bridge.dart)
-- Implement `InvalidDxgiHandle` implementing `Exception`.
-- Implement `SurfaceBindingFailure` implementing `Exception`.
-- Implement `FlutterWindowsEmbedder`:
-  - Fields: `final String surfaceType`.
-  - Constructor: `const FlutterWindowsEmbedder({required this.surfaceType})`.
-  - Method: `bool bindSharedSurface(int handle)`:
-    - If `handle == 0`, throws `InvalidDxgiHandle`.
-    - Returns `true`.
-- Implement `WindowsDxgiBridge`:
-  - Fields: `final bool? _isWindowsOverride`.
-  - Constructor: `const WindowsDxgiBridge({bool? isWindows}) : _isWindowsOverride = isWindows;`
-  - Getter: `bool get _isWindows` to detect Windows platform (falling back to `Platform.isWindows` if override is null).
-  - Method: `int createSharedHandle(int width, int height)`:
-    - Validates `width > 0` and `height > 0`. Throws `SurfaceBindingFailure` if not.
-    - Returns a mock handle value `2588` (simulating `0x0A1C`).
-  - Method: `bool registerDxgiSurface(int handle)`:
-    - If `handle == 0`, throws `InvalidDxgiHandle`.
-    - Returns `true`.
+#### [NEW] [linux_vulkan_bridge.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/domain/cesium_3d/native/linux_vulkan_bridge.dart)
+- Implement `FdExportFailed` implementing `Exception`.
+- Implement `FdImportFailed` implementing `Exception`.
+- Implement `VulkanExternalMemory`:
+  - Fields: `final String extensionName`.
+  - Constructor: `const VulkanExternalMemory({required this.extensionName})`.
+  - Method: `void uses() {}`.
+- Implement `LinuxVulkanBridge`:
+  - Fields: `final bool? _isLinuxOverride`.
+  - Constructor: `const LinuxVulkanBridge({bool? isLinux}) : _isLinuxOverride = isLinux;`
+  - Getter: `bool get _isLinux` to detect Linux platform (falling back to `Platform.isLinux` if override is null).
+  - Method: `int exportMemoryFd()`:
+    - Checks platform: if not on Linux (using `_isLinux`), throws `FdExportFailed`.
+    - Returns mock file descriptor integer `12`.
+  - Method: `bool importMemoryFd(int fd)`:
+    - If `fd <= 0` or `fd == 999` (closed/invalid FD), throws `FdImportFailed`.
+    - Returns true.
   - Method: `bool validatePayload(Map<String, dynamic> payload)`:
     - Parses and validates payload schema.
     - Constraints validation:
-      - `dxgiHandle` (string or parsed int) must not be zero/empty. Throws `InvalidDxgiHandle` if zero or empty.
-      - Detect Windows platform: `Platform.isWindows` or the mock `isWindows` flag.
-      - If running on Windows, validation must strictly enforce that `"surfaceType"` is `"kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle"`. If not, throws `InvalidDxgiHandle`.
-      - Width and height must be positive, non-zero. If not, throws `SurfaceBindingFailure`.
-      - If valid, returns `true`.
+      - `vulkanMemoryFd` must be positive and non-zero (throws `FdImportFailed` if <= 0). If it is `999` (closed FD), throws `FdImportFailed`.
+      - `extensionName` must be present and match `"VK_KHR_external_memory_fd"`. If not, throws `FdImportFailed`.
+      - If valid, returns true.
 
 ---
 
 ### Component: Verification & Test Suite
 
-#### [NEW] [windows_dxgi_interop_test.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/test/cesium_3d/windows_dxgi_interop_test.dart)
+#### [NEW] [linux_vulkan_interop_test.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/test/cesium_3d/linux_vulkan_interop_test.dart)
 - Add unit tests verifying:
-  - Given the application is running on Windows, the graphics bridge allocates/validates payload with shared handle and surface type `kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle` correctly.
-  - Attempting to register an invalid or null handle (e.g. zero handle) throws `InvalidDxgiHandle`.
-  - Dimension constraints validation on `createSharedHandle`.
-  - Dimension constraints validation on `validatePayload`.
-  - Non-Windows platform bypass validation checks for surfaceType.
+  - Given the application is running on Linux, the graphics bridge allocates/validates payload with shared file descriptor and extension `"VK_KHR_external_memory_fd"` correctly.
+  - Passing an invalid or closed file descriptor (e.g. `999` or negative) throws a `FdImportFailed` exception.
+  - Verify `exportMemoryFd` behaves correctly under Linux vs non-Linux environments.
+  - Verify fields initialization check on `VulkanExternalMemory`.
 
 ---
 
@@ -53,5 +48,5 @@ This feature implements the Windows DXGI Texture Interop bridge classes and veri
 ### Automated Tests
 - Run the newly created test suite:
   ```bash
-  flutter test test/cesium_3d/windows_dxgi_interop_test.dart
+  flutter test test/cesium_3d/linux_vulkan_interop_test.dart
   ```
