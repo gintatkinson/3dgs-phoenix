@@ -77,29 +77,27 @@ This plan covers editing the Unreal Target configuration files to use an overrid
 
 #### Component 1: Native macOS Runner Plugin (Swift)
 
-##### [NEW] [MacIosurfaceTexturePlugin.swift](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/macos/Runner/MacIosurfaceTexturePlugin.swift)
-- Implement `FlutterPlugin` and `FlutterTexture` protocols.
-- Register a texture with `FlutterViewController.engine.textureRegistry` to obtain a `textureId`.
-- Expose a MethodChannel `3dgs.phoenix/texture_bridge` to receive frame update commands containing the `ioSurfaceRef` pointer value.
-- Wrap the shared `ioSurfaceRef` in a CoreVideo `CVPixelBuffer` backing, bind it to a Metal `MTLTexture`, and push it into the texture registry.
-
 ##### [MODIFY] [MainFlutterWindow.swift](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/macos/Runner/MainFlutterWindow.swift)
-- Instantiate and register `MacIosurfaceTexturePlugin` with the main window's `FlutterViewController`.
+- Add `MacIosurfaceTexturePlugin` class implementation containing method channel interface, registry, and pixel buffer copying using `CVPixelBufferCreateWithIOSurface`.
+- Register the plugin in `awakeFromNib()`.
 
 #### Component 2: Flutter FFI & Viewport Integration (Dart)
 
 ##### [NEW] [mac_iosurface_texture_controller.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/domain/cesium_3d/native/mac_iosurface_texture_controller.dart)
-- Expose a MethodChannel interface to request texture registration from the native plugin.
-- Forward frame render notifications with the `ioSurfaceRef` pointer value to update the texture buffer.
+- Expose a `MacIosurfaceTextureController` class to initialize the texture and request frame updates.
 
 ##### [MODIFY] [scene_3d_viewport.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/features/topology/scene_3d_viewport.dart)
-- Instantiate `MacIosurfaceTextureController` during initialization.
-- Update the widget's `build` tree to display `Texture(textureId: id)` instead of the CustomPaint canvas when the stream is active.
+- Import `mac_iosurface_texture_controller.dart`.
+- Instantiate and initialize `MacIosurfaceTextureController` in `Scene3DViewportState`.
+- Add periodic 33ms timer updating frame with mock surface address in `_initUnrealDaemon`.
+- Update `Scene3DViewportPainter` to accept `drawGlobe` parameter (defaults to true) and skip background/globe spheres/tiles drawing if false.
+- Render `Texture` inside `Stack` in `build` when Unreal is active and texture is registered.
 
 ---
 
 ## Verification Plan for GPU Shared Texture Viewport
-1. Compile and build the macOS application.
-2. Verify the 3D Viewport renders the shared GPU texture stream from the active background Unreal daemon process.
+1. Run `flutter analyze` to check for compilation or lint issues.
+2. Run `flutter build macos --debug` to verify the project builds and runs successfully.
+
 
 

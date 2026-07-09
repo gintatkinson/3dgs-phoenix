@@ -72,19 +72,31 @@ class UnrealDaemonManager {
   /// Gets the active watcher, if any.
   ProcessWatcher? get activeWatcher => _watcher;
 
+  String? _workingDirectory;
+
   /// Starts the Unreal rendering daemon with the `-RenderOffscreen` flag.
   ///
   /// Throws [DaemonBootFailure] if the file doesn't exist or starting fails.
-  Future<bool> spawnDaemon(String unrealPath) async {
+  Future<bool> spawnDaemon(String unrealPath, {String? workingDirectory}) async {
     if (!_fileExists(unrealPath)) {
       throw DaemonBootFailure('Unreal executable file does not exist at path: $unrealPath');
     }
 
     _unrealPath = unrealPath;
+    _workingDirectory = workingDirectory;
 
     try {
       _log?.call('Spawning Unreal daemon: $unrealPath with -RenderOffscreen');
-      final process = await _spawnProcess(unrealPath, const ['-RenderOffscreen']);
+      final Process process;
+      if (workingDirectory != null && _spawnProcess == _defaultSpawn) {
+        process = await Process.start(
+          unrealPath,
+          const ['-RenderOffscreen'],
+          workingDirectory: workingDirectory,
+        );
+      } else {
+        process = await _spawnProcess(unrealPath, const ['-RenderOffscreen']);
+      }
       _process = process;
       _watcher = ProcessWatcher(process);
       return true;
@@ -153,6 +165,6 @@ class UnrealDaemonManager {
       _watcher = null;
     }
 
-    return await spawnDaemon(path);
+    return await spawnDaemon(path, workingDirectory: _workingDirectory);
   }
 }

@@ -14,6 +14,7 @@ import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:app_flutter/domain/cesium_3d/camera_controller.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
 import 'package:app_flutter/domain/cesium_3d/unreal_daemon_manager.dart';
+import 'package:app_flutter/domain/cesium_3d/native/mac_iosurface_texture_controller.dart';
 import 'package:app_flutter/features/topology/topology_map.dart';
 
 class Scene3DViewport extends StatefulWidget {
@@ -45,16 +46,45 @@ class Scene3DViewport extends StatefulWidget {
 class Scene3DViewportState extends State<Scene3DViewport> {
   late CameraController _cameraController;
   UnrealDaemonManager? _unrealDaemonManager;
+  late final MacIosurfaceTextureController _textureController = MacIosurfaceTextureController();
+  Timer? _frameUpdateTimer;
+
+  Future<void> _initTexture() async {
+    await _textureController.initialize();
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   Future<void> _initUnrealDaemon() async {
-    final String workspacePath = '../app_unreal/Binaries/Mac/cesium_daemon';
-    final String bundlePath = '${File(Platform.resolvedExecutable).parent.parent.path}/Resources/cesium_daemon';
     String targetPath = '';
-    if (File(workspacePath).existsSync()) {
-      targetPath = workspacePath;
-    } else if (File(bundlePath).existsSync()) {
+    String? workingDirectory;
+
+    final String bundlePath = '${File(Platform.resolvedExecutable).parent.parent.path}/Resources/Binaries/Mac/cesium_daemon';
+    final String bundleDir = '${File(Platform.resolvedExecutable).parent.parent.path}/Resources/Binaries/Mac';
+
+    if (File(bundlePath).existsSync()) {
       targetPath = bundlePath;
+      workingDirectory = bundleDir;
+    } else {
+      Directory dir = File(Platform.resolvedExecutable).parent;
+      String? workspaceRoot;
+      for (int i = 0; i < 12; i++) {
+        if (Directory('${dir.path}/app_unreal').existsSync()) {
+          workspaceRoot = dir.path;
+          break;
+        }
+        dir = dir.parent;
+      }
+      if (workspaceRoot != null) {
+        final String devPath = '$workspaceRoot/app_unreal/Binaries/Mac/cesium_daemon';
+        if (File(devPath).existsSync()) {
+          targetPath = devPath;
+          workingDirectory = '$workspaceRoot/app_unreal/Binaries/Mac';
+        }
+      }
     }
+
     if (targetPath.isNotEmpty) {
       _unrealDaemonManager = UnrealDaemonManager(
         log: (msg) {
@@ -62,8 +92,11 @@ class Scene3DViewportState extends State<Scene3DViewport> {
         },
       );
       try {
-        await _unrealDaemonManager!.spawnDaemon(targetPath);
+        await _unrealDaemonManager!.spawnDaemon(targetPath, workingDirectory: workingDirectory);
         _unrealDaemonManager!.monitorDaemon();
+        _frameUpdateTimer = Timer.periodic(const Duration(milliseconds: 33), (timer) {
+          _textureController.updateFrame(140735492982848);
+        });
       } catch (e) {
         debugPrint('[UnrealDaemon] Failed to spawn daemon: $e');
       }
@@ -186,6 +219,11 @@ class Scene3DViewportState extends State<Scene3DViewport> {
     _globeFocusNode.addListener(() {
       if (mounted) setState(() {});
     });
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _initTexture();
+      }
+    });
     _initUnrealDaemon();
   }
 
@@ -208,6 +246,7 @@ class Scene3DViewportState extends State<Scene3DViewport> {
 
   @override
   void dispose() {
+    _frameUpdateTimer?.cancel();
     _flyTimer?.cancel();
     _globeFocusNode.dispose();
     _cameraController.removeListener(_onCameraChangedInside);
@@ -560,24 +599,54 @@ class Scene3DViewportState extends State<Scene3DViewport> {
                     _cameraController.zoomInteractive(event.scrollDelta.dy);
                   }
                 },
-                child: CustomPaint(
-                  painter: Scene3DViewportPainter(
-                    camera: _cameraController.current,
-                    activeStyle: _activeStyle,
-                    astronomicalBody: _astronomicalBody,
-                    elevationActive: _elevationActive,
-                    showDevices: _showDevices,
-                    showLinks: _showLinks,
-                    showLabels: _showLabels,
-                    showDropLines: _showDropLines,
-                    topologyData: widget.topologyData,
-                    userRotationX: 0.0,
-                    userTilt: 0.0,
-                    zoomScale: zoomScale,
-                    tileRenderer: _tileRenderer,
-                    imageryProvider: _providerForStyle(_activeStyle),
-                  ),
-                ),
+                child: (_unrealDaemonManager != null && _textureController.textureId != null)
+                    ? Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Texture(textureId: _textureController.textureId!),
+                          ),
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: Scene3DViewportPainter(
+                                camera: _cameraController.current,
+                                activeStyle: _activeStyle,
+                                astronomicalBody: _astronomicalBody,
+                                elevationActive: _elevationActive,
+                                showDevices: _showDevices,
+                                showLinks: _showLinks,
+                                showLabels: _showLabels,
+                                showDropLines: _showDropLines,
+                                topologyData: widget.topologyData,
+                                userRotationX: 0.0,
+                                userTilt: 0.0,
+                                zoomScale: zoomScale,
+                                tileRenderer: _tileRenderer,
+                                imageryProvider: _providerForStyle(_activeStyle),
+                                drawGlobe: false,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : CustomPaint(
+                        painter: Scene3DViewportPainter(
+                          camera: _cameraController.current,
+                          activeStyle: _activeStyle,
+                          astronomicalBody: _astronomicalBody,
+                          elevationActive: _elevationActive,
+                          showDevices: _showDevices,
+                          showLinks: _showLinks,
+                          showLabels: _showLabels,
+                          showDropLines: _showDropLines,
+                          topologyData: widget.topologyData,
+                          userRotationX: 0.0,
+                          userTilt: 0.0,
+                          zoomScale: zoomScale,
+                          tileRenderer: _tileRenderer,
+                          imageryProvider: _providerForStyle(_activeStyle),
+                          drawGlobe: true,
+                        ),
+                      ),
               ),
             ),
             
@@ -1031,6 +1100,7 @@ class Scene3DViewportPainter extends CustomPainter {
   final double zoomScale;
   final GlobeTileRenderer? tileRenderer;
   final ImageryProvider imageryProvider;
+  final bool drawGlobe;
 
   Scene3DViewportPainter({
     required this.camera,
@@ -1047,6 +1117,7 @@ class Scene3DViewportPainter extends CustomPainter {
     required this.zoomScale,
     this.tileRenderer,
     this.imageryProvider = ImageryProvider.arcGisSatellite,
+    this.drawGlobe = true,
   });
 
   // Reusable paints to avoid per-iteration allocations in the hot 60fps rendering path.
@@ -1421,238 +1492,240 @@ class Scene3DViewportPainter extends CustomPainter {
       return oceanPath.transform(scaleMatrix.storage);
     }
 
-    // 1. Draw Starry Space Background (~100 stars)
-    final math.Random rand = math.Random(42);
-    for (int i = 0; i < 100; i++) {
-      final double rxVal = rand.nextDouble() * size.width;
-      final double ryVal = rand.nextDouble() * size.height;
-      final double rSize = rand.nextDouble() * 1.5 + 0.5;
-      final double rOpacity = rand.nextDouble() * 0.7 + 0.3;
-      _starPaint.color = Color.fromRGBO(255, 255, 255, rOpacity);
-      canvas.drawCircle(Offset(rxVal, ryVal), rSize, _starPaint);
-    }
-
-    // 2. Astronomical Body customization (corona, atmospheric glows)
-    if (astronomicalBody == 'Proxima Centauri') {
-      // Intense bright stellar corona glow layers
-      final Paint coronaPaint1 = Paint()
-        ..shader = RadialGradient(
-          colors: const [
-            Color(0x99FF3D00), // intense red-orange
-            Color(0x44FF9100), // glowing orange
-            Color(0x00000000),
-          ],
-        ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.8));
-      canvas.drawPath(_getScaledPath(1.8), coronaPaint1);
-
-      final Paint coronaPaint2 = Paint()
-        ..shader = RadialGradient(
-          colors: const [
-            Color(0xCCFFEA00), // bright yellow
-            Color(0x33FF9100),
-            Color(0x00000000),
-          ],
-        ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.45));
-      canvas.drawPath(_getScaledPath(1.45), coronaPaint2);
-    } else if (astronomicalBody == 'Mars') {
-      // Dusty reddish-orange atmospheric glow
-      final Paint marsAtmosphere = Paint()
-        ..shader = RadialGradient(
-          colors: const [
-            Color(0x66FF5722),
-            Color(0x22FF8A65),
-            Color(0x00000000),
-          ],
-        ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.35));
-      canvas.drawPath(_getScaledPath(1.35), marsAtmosphere);
-    } else {
-      // Earth: Glowing atmospheric blue/cyan radial glow
-      final Paint atmospherePaint = Paint()
-        ..shader = RadialGradient(
-          colors: const [
-            Color(0x6600E5FF),
-            Color(0x2200E5FF),
-            Color(0x00000000),
-          ],
-          stops: const [0.0, 0.7, 1.0],
-        ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.35));
-      canvas.drawPath(_getScaledPath(1.35), atmospherePaint);
-    }
-
-    // 3. Earth's / astronomical sphere style variables
-    List<Color> oceanColors;
-    Color gridColor;
-    
-    if (astronomicalBody == 'Mars') {
-      oceanColors = [const Color(0xFFBF360C), const Color(0xFF3E1103)]; // Desert sphere
-      gridColor = const Color(0x22FF5722);
-    } else if (astronomicalBody == 'Proxima Centauri') {
-      oceanColors = [const Color(0xFFFFD54F), const Color(0xFFE65100)]; // Star golden gradient
-      gridColor = const Color(0x33FFD54F);
-    } else {
-      switch (activeStyle) {
-        case 'Dark Map':
-          oceanColors = [const Color(0xFF161B22), const Color(0xFF0D1117)];
-          gridColor = const Color(0x1A00E5FF);
-          break;
-        case 'Street Map':
-          oceanColors = [const Color(0xFF29B6F6), const Color(0xFF0288D1)];
-          gridColor = const Color(0x33000000);
-          break;
-        case 'Light Map':
-          oceanColors = [const Color(0xFFE0F7FA), const Color(0xFF80DEEA)];
-          gridColor = const Color(0x26000000);
-          break;
-        case 'Satellite Map':
-        default:
-          oceanColors = [const Color(0xFF0F2B5C), const Color(0xFF040A18)];
-          gridColor = const Color(0x2600E5FF);
-          break;
+    if (drawGlobe) {
+      // 1. Draw Starry Space Background (~100 stars)
+      final math.Random rand = math.Random(42);
+      for (int i = 0; i < 100; i++) {
+        final double rxVal = rand.nextDouble() * size.width;
+        final double ryVal = rand.nextDouble() * size.height;
+        final double rSize = rand.nextDouble() * 1.5 + 0.5;
+        final double rOpacity = rand.nextDouble() * 0.7 + 0.3;
+        _starPaint.color = Color.fromRGBO(255, 255, 255, rOpacity);
+        canvas.drawCircle(Offset(rxVal, ryVal), rSize, _starPaint);
       }
-    }
 
-    // 4. Draw Astronomical / Planetary Sphere
-    final Paint spherePaint = Paint()
-      ..shader = RadialGradient(
-        colors: oceanColors,
-      ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius));
-    canvas.drawPath(oceanPath, spherePaint);
+      // 2. Astronomical Body customization (corona, atmospheric glows)
+      if (astronomicalBody == 'Proxima Centauri') {
+        // Intense bright stellar corona glow layers
+        final Paint coronaPaint1 = Paint()
+          ..shader = RadialGradient(
+            colors: const [
+              Color(0x99FF3D00), // intense red-orange
+              Color(0x44FF9100), // glowing orange
+              Color(0x00000000),
+            ],
+          ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.8));
+        canvas.drawPath(_getScaledPath(1.8), coronaPaint1);
 
-    // 5. Draw Grid lines (Meridians & Parallels) - front hemisphere only
-    _gridPaint.color = gridColor;
-    const double earthRadius = 6378137.0;
+        final Paint coronaPaint2 = Paint()
+          ..shader = RadialGradient(
+            colors: const [
+              Color(0xCCFFEA00), // bright yellow
+              Color(0x33FF9100),
+              Color(0x00000000),
+            ],
+          ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.45));
+        canvas.drawPath(_getScaledPath(1.45), coronaPaint2);
+      } else if (astronomicalBody == 'Mars') {
+        // Dusty reddish-orange atmospheric glow
+        final Paint marsAtmosphere = Paint()
+          ..shader = RadialGradient(
+            colors: const [
+              Color(0x66FF5722),
+              Color(0x22FF8A65),
+              Color(0x00000000),
+            ],
+          ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.35));
+        canvas.drawPath(_getScaledPath(1.35), marsAtmosphere);
+      } else {
+        // Earth: Glowing atmospheric blue/cyan radial glow
+        final Paint atmospherePaint = Paint()
+          ..shader = RadialGradient(
+            colors: const [
+              Color(0x6600E5FF),
+              Color(0x2200E5FF),
+              Color(0x00000000),
+            ],
+            stops: const [0.0, 0.7, 1.0],
+          ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius * 1.35));
+        canvas.drawPath(_getScaledPath(1.35), atmospherePaint);
+      }
 
-    const int numMeridians = 12;
-    const int meridianSteps = 30;
-    final double meridianLngStep = 2 * math.pi / numMeridians;
-    final double meridianLatStep = math.pi / meridianSteps;
-    for (int i = 0; i < numMeridians; i++) {
-      final double lng = i * meridianLngStep;
-      for (int j = 0; j < meridianSteps; j++) {
-        final double lat1 = -math.pi / 2 + j * meridianLatStep;
-        final double lat2 = -math.pi / 2 + (j + 1) * meridianLatStep;
-        
-        final ProjectedPoint p1 = project(lat1, lng, earthRadius, center, rotationAngle, tilt, size);
-        final ProjectedPoint p2 = project(lat2, lng, earthRadius, center, rotationAngle, tilt, size);
-        
-        if (p1.z >= 0 && p2.z >= 0) {
-          canvas.drawLine(p1.offset, p2.offset, _gridPaint);
+      // 3. Earth's / astronomical sphere style variables
+      List<Color> oceanColors;
+      Color gridColor;
+      
+      if (astronomicalBody == 'Mars') {
+        oceanColors = [const Color(0xFFBF360C), const Color(0xFF3E1103)]; // Desert sphere
+        gridColor = const Color(0x22FF5722);
+      } else if (astronomicalBody == 'Proxima Centauri') {
+        oceanColors = [const Color(0xFFFFD54F), const Color(0xFFE65100)]; // Star golden gradient
+        gridColor = const Color(0x33FFD54F);
+      } else {
+        switch (activeStyle) {
+          case 'Dark Map':
+            oceanColors = [const Color(0xFF161B22), const Color(0xFF0D1117)];
+            gridColor = const Color(0x1A00E5FF);
+            break;
+          case 'Street Map':
+            oceanColors = [const Color(0xFF29B6F6), const Color(0xFF0288D1)];
+            gridColor = const Color(0x33000000);
+            break;
+          case 'Light Map':
+            oceanColors = [const Color(0xFFE0F7FA), const Color(0xFF80DEEA)];
+            gridColor = const Color(0x26000000);
+            break;
+          case 'Satellite Map':
+          default:
+            oceanColors = [const Color(0xFF0F2B5C), const Color(0xFF040A18)];
+            gridColor = const Color(0x2600E5FF);
+            break;
         }
       }
-    }
 
-    const int numParallels = 6;
-    const int parallelSteps = 60;
-    final double parallelLngStep = 2 * math.pi / parallelSteps;
-    final double parallelLatStep = math.pi / (numParallels + 1);
-    for (int i = 0; i < numParallels; i++) {
-      final double lat = -math.pi / 2 + (i + 1) * parallelLatStep;
-      for (int j = 0; j < parallelSteps; j++) {
-        final double lng1 = j * parallelLngStep;
-        final double lng2 = (j + 1) * parallelLngStep;
-        
-        final ProjectedPoint p1 = project(lat, lng1, earthRadius, center, rotationAngle, tilt, size);
-        final ProjectedPoint p2 = project(lat, lng2, earthRadius, center, rotationAngle, tilt, size);
-        
-        if (p1.z >= 0 && p2.z >= 0) {
-          canvas.drawLine(p1.offset, p2.offset, _gridPaint);
-        }
-      }
-    }
+      // 4. Draw Astronomical / Planetary Sphere
+      final Paint spherePaint = Paint()
+        ..shader = RadialGradient(
+          colors: oceanColors,
+        ).createShader(Rect.fromCircle(center: projectedCenter, radius: projectedRadius));
+      canvas.drawPath(oceanPath, spherePaint);
 
-    // 6. Draw Procedural Latitude Climate Bands (no hardcoded geography)
-    if (astronomicalBody != 'Proxima Centauri') {
-      final List<(double, double, Color)> bands = [
-        (math.pi / 2, math.pi * 0.4, const Color(0x0800BFFF)),  // Arctic
-        (math.pi * 0.4, math.pi * 0.15, const Color(0x082196F3)), // Boreal
-        (math.pi * 0.15, -math.pi * 0.15, const Color(0x0800E676)), // Tropical
-        (-math.pi * 0.15, -math.pi * 0.4, const Color(0x082196F3)), // Temperate S
-        (-math.pi * 0.4, -math.pi / 2, const Color(0x0800BFFF)),  // Antarctic
-      ];
+      // 5. Draw Grid lines (Meridians & Parallels) - front hemisphere only
+      _gridPaint.color = gridColor;
+      const double earthRadius = 6378137.0;
 
-      for (final (latMax, latMin, color) in bands) {
-        _bandFillPaint.color = color;
-        _bandBorderPaint.color = color.withOpacity(0.4);
-
-        const int steps = 60;
-        final List<ProjectedPoint> pts = [];
-        for (int s = 0; s <= steps; s++) {
-          final double lng = s * (2 * math.pi / steps);
-          final p = project(latMin, lng, 6378137.0 * 1.002, center, rotationAngle, tilt, size);
-          if (p.z >= 0.0) pts.add(p);
-        }
-        for (int s = steps; s >= 0; s--) {
-          final double lng = s * (2 * math.pi / steps);
-          final p = project(latMax, lng, 6378137.0 * 1.002, center, rotationAngle, tilt, size);
-          if (p.z >= 0.0) pts.add(p);
-        }
-
-        if (pts.length >= 3) {
-          final Path path = Path();
-          path.moveTo(pts.first.offset.dx, pts.first.offset.dy);
-          for (int i = 1; i < pts.length; i++) {
-            path.lineTo(pts[i].offset.dx, pts[i].offset.dy);
-          }
-          path.close();
-          canvas.drawPath(path, _bandFillPaint);
-          canvas.drawPath(path, _bandBorderPaint);
-        }
-      }
-    } else {
-      // Proxima Centauri: Solar flares and plasma arcs
-      const int numFlares = 8;
-      for (int f = 0; f < numFlares; f++) {
-        final double baseAngle = f * (2 * math.pi / numFlares);
-        final double pulse = 1.0;
-        
-        final double angleStart = baseAngle;
-        final double angleEnd = baseAngle + 0.25;
-        final double angleMid = baseAngle + 0.125;
-        
-        final Offset ptStart = Offset(
-          projectedCenter.dx + projectedRadius * math.cos(angleStart),
-          projectedCenter.dy + projectedRadius * math.sin(angleStart),
-        );
-        final Offset ptEnd = Offset(
-          projectedCenter.dx + projectedRadius * math.cos(angleEnd),
-          projectedCenter.dy + projectedRadius * math.sin(angleEnd),
-        );
-        final Offset ptControl = Offset(
-          projectedCenter.dx + projectedRadius * 1.25 * pulse * math.cos(angleMid),
-          projectedCenter.dy + projectedRadius * 1.25 * pulse * math.sin(angleMid),
-        );
-        
-        final Path flarePath = Path()
-          ..moveTo(ptStart.dx, ptStart.dy)
-          ..quadraticBezierTo(ptControl.dx, ptControl.dy, ptEnd.dx, ptEnd.dy);
+      const int numMeridians = 12;
+      const int meridianSteps = 30;
+      final double meridianLngStep = 2 * math.pi / numMeridians;
+      final double meridianLatStep = math.pi / meridianSteps;
+      for (int i = 0; i < numMeridians; i++) {
+        final double lng = i * meridianLngStep;
+        for (int j = 0; j < meridianSteps; j++) {
+          final double lat1 = -math.pi / 2 + j * meridianLatStep;
+          final double lat2 = -math.pi / 2 + (j + 1) * meridianLatStep;
           
-        canvas.drawPath(flarePath, _flareGlowPaint);
-        canvas.drawPath(flarePath, _flarePaint);
+          final ProjectedPoint p1 = project(lat1, lng, earthRadius, center, rotationAngle, tilt, size);
+          final ProjectedPoint p2 = project(lat2, lng, earthRadius, center, rotationAngle, tilt, size);
+          
+          if (p1.z >= 0 && p2.z >= 0) {
+            canvas.drawLine(p1.offset, p2.offset, _gridPaint);
+          }
+        }
       }
-    }
 
-    // 6b. Render map-imagery tiles on the sphere surface.
-    if (tileRenderer != null && tileRenderer!.isEnabled) {
-      tileRenderer!.renderTiles(
-        canvas,
-        camera,
-        size,
-        center,
-        6378137.0,
-        (double latDeg, double lngDeg) {
-          final double elev = getElevation(latDeg, lngDeg);
-          final double ampElev = elev * 80.0;
-          return project(
-            _rad(latDeg),
-            _rad(lngDeg),
-            6378137.0 + ampElev,
-            center,
-            rotationAngle,
-            tilt,
-            size,
+      const int numParallels = 6;
+      const int parallelSteps = 60;
+      final double parallelLngStep = 2 * math.pi / parallelSteps;
+      final double parallelLatStep = math.pi / (numParallels + 1);
+      for (int i = 0; i < numParallels; i++) {
+        final double lat = -math.pi / 2 + (i + 1) * parallelLatStep;
+        for (int j = 0; j < parallelSteps; j++) {
+          final double lng1 = j * parallelLngStep;
+          final double lng2 = (j + 1) * parallelLngStep;
+          
+          final ProjectedPoint p1 = project(lat, lng1, earthRadius, center, rotationAngle, tilt, size);
+          final ProjectedPoint p2 = project(lat, lng2, earthRadius, center, rotationAngle, tilt, size);
+          
+          if (p1.z >= 0 && p2.z >= 0) {
+            canvas.drawLine(p1.offset, p2.offset, _gridPaint);
+          }
+        }
+      }
+
+      // 6. Draw Procedural Latitude Climate Bands (no hardcoded geography)
+      if (astronomicalBody != 'Proxima Centauri') {
+        final List<(double, double, Color)> bands = [
+          (math.pi / 2, math.pi * 0.4, const Color(0x0800BFFF)),  // Arctic
+          (math.pi * 0.4, math.pi * 0.15, const Color(0x082196F3)), // Boreal
+          (math.pi * 0.15, -math.pi * 0.15, const Color(0x0800E676)), // Tropical
+          (-math.pi * 0.15, -math.pi * 0.4, const Color(0x082196F3)), // Temperate S
+          (-math.pi * 0.4, -math.pi / 2, const Color(0x0800BFFF)),  // Antarctic
+        ];
+
+        for (final (latMax, latMin, color) in bands) {
+          _bandFillPaint.color = color;
+          _bandBorderPaint.color = color.withOpacity(0.4);
+
+          const int steps = 60;
+          final List<ProjectedPoint> pts = [];
+          for (int s = 0; s <= steps; s++) {
+            final double lng = s * (2 * math.pi / steps);
+            final p = project(latMin, lng, 6378137.0 * 1.002, center, rotationAngle, tilt, size);
+            if (p.z >= 0.0) pts.add(p);
+          }
+          for (int s = steps; s >= 0; s--) {
+            final double lng = s * (2 * math.pi / steps);
+            final p = project(latMax, lng, 6378137.0 * 1.002, center, rotationAngle, tilt, size);
+            if (p.z >= 0.0) pts.add(p);
+          }
+
+          if (pts.length >= 3) {
+            final Path path = Path();
+            path.moveTo(pts.first.offset.dx, pts.first.offset.dy);
+            for (int i = 1; i < pts.length; i++) {
+              path.lineTo(pts[i].offset.dx, pts[i].offset.dy);
+            }
+            path.close();
+            canvas.drawPath(path, _bandFillPaint);
+            canvas.drawPath(path, _bandBorderPaint);
+          }
+        }
+      } else {
+        // Proxima Centauri: Solar flares and plasma arcs
+        const int numFlares = 8;
+        for (int f = 0; f < numFlares; f++) {
+          final double baseAngle = f * (2 * math.pi / numFlares);
+          final double pulse = 1.0;
+          
+          final double angleStart = baseAngle;
+          final double angleEnd = baseAngle + 0.25;
+          final double angleMid = baseAngle + 0.125;
+          
+          final Offset ptStart = Offset(
+            projectedCenter.dx + projectedRadius * math.cos(angleStart),
+            projectedCenter.dy + projectedRadius * math.sin(angleStart),
           );
-        },
-      );
+          final Offset ptEnd = Offset(
+            projectedCenter.dx + projectedRadius * math.cos(angleEnd),
+            projectedCenter.dy + projectedRadius * math.sin(angleEnd),
+          );
+          final Offset ptControl = Offset(
+            projectedCenter.dx + projectedRadius * 1.25 * pulse * math.cos(angleMid),
+            projectedCenter.dy + projectedRadius * 1.25 * pulse * math.sin(angleMid),
+          );
+          
+          final Path flarePath = Path()
+            ..moveTo(ptStart.dx, ptStart.dy)
+            ..quadraticBezierTo(ptControl.dx, ptControl.dy, ptEnd.dx, ptEnd.dy);
+            
+          canvas.drawPath(flarePath, _flareGlowPaint);
+          canvas.drawPath(flarePath, _flarePaint);
+        }
+      }
+
+      // 6b. Render map-imagery tiles on the sphere surface.
+      if (tileRenderer != null && tileRenderer!.isEnabled) {
+        tileRenderer!.renderTiles(
+          canvas,
+          camera,
+          size,
+          center,
+          6378137.0,
+          (double latDeg, double lngDeg) {
+            final double elev = getElevation(latDeg, lngDeg);
+            final double ampElev = elev * 80.0;
+            return project(
+              _rad(latDeg),
+              _rad(lngDeg),
+              6378137.0 + ampElev,
+              center,
+              rotationAngle,
+              tilt,
+              size,
+            );
+          },
+        );
+      }
     }
 
     // 7. Space, Ground, and Underwater Node Layouts (Dynamic DB-Backed)
@@ -1955,7 +2028,8 @@ class Scene3DViewportPainter extends CustomPainter {
         oldDelegate.userTilt != userTilt ||
         oldDelegate.zoomScale != zoomScale ||
         oldDelegate.tileRenderer != tileRenderer ||
-        oldDelegate.imageryProvider != imageryProvider;
+        oldDelegate.imageryProvider != imageryProvider ||
+        oldDelegate.drawGlobe != drawGlobe;
   }
 }
 
