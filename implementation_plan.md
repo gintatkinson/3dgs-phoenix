@@ -32,3 +32,20 @@ This plan covers editing the Unreal Target configuration files to use an overrid
    ```
 3. Verify that compilation succeeds and that the binary exists under `app_unreal/Binaries/Mac/`.
 
+
+## Unreal Daemon Integration
+
+### Component: Flutter 3D Viewport
+
+#### [MODIFY] [scene_3d_viewport.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/features/topology/scene_3d_viewport.dart)
+- Add `import 'dart:io';` and `import 'package:app_flutter/domain/cesium_3d/unreal_daemon_manager.dart';` imports.
+- Declare field `UnrealDaemonManager? _unrealDaemonManager;` in `Scene3DViewportState`.
+- Implement `_initUnrealDaemon()` method inside `Scene3DViewportState`.
+- Call `_initUnrealDaemon()` at the end of `initState()`.
+- Add process cleanup in `dispose()`.
+
+---
+
+## Verification Plan for Unreal Daemon
+
+1. Run static analysis via `flutter analyze` in `app_flutter/` to verify no errors exist.

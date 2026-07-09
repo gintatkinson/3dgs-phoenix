@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:app_flutter/domain/cesium_3d/projected_point.dart';
 import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:app_flutter/domain/cesium_3d/camera_controller.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
+import 'package:app_flutter/domain/cesium_3d/unreal_daemon_manager.dart';
 import 'package:app_flutter/features/topology/topology_map.dart';
 
 class Scene3DViewport extends StatefulWidget {
@@ -42,6 +44,31 @@ class Scene3DViewport extends StatefulWidget {
 
 class Scene3DViewportState extends State<Scene3DViewport> {
   late CameraController _cameraController;
+  UnrealDaemonManager? _unrealDaemonManager;
+
+  Future<void> _initUnrealDaemon() async {
+    final String workspacePath = '../app_unreal/Binaries/Mac/cesium_daemon';
+    final String bundlePath = '${File(Platform.resolvedExecutable).parent.parent.path}/Resources/cesium_daemon';
+    String targetPath = '';
+    if (File(workspacePath).existsSync()) {
+      targetPath = workspacePath;
+    } else if (File(bundlePath).existsSync()) {
+      targetPath = bundlePath;
+    }
+    if (targetPath.isNotEmpty) {
+      _unrealDaemonManager = UnrealDaemonManager(
+        log: (msg) {
+          debugPrint('[UnrealDaemon] $msg');
+        },
+      );
+      try {
+        await _unrealDaemonManager!.spawnDaemon(targetPath);
+        _unrealDaemonManager!.monitorDaemon();
+      } catch (e) {
+        debugPrint('[UnrealDaemon] Failed to spawn daemon: $e');
+      }
+    }
+  }
 
   double clampPlayheadRate(double rate) {
     return rate.clamp(0.9, 1.1);
@@ -159,6 +186,7 @@ class Scene3DViewportState extends State<Scene3DViewport> {
     _globeFocusNode.addListener(() {
       if (mounted) setState(() {});
     });
+    _initUnrealDaemon();
   }
 
   void _onCameraChangedInside() {
@@ -185,6 +213,9 @@ class Scene3DViewportState extends State<Scene3DViewport> {
     _cameraController.removeListener(_onCameraChangedInside);
     _cameraController.dispose();
     _tileRenderer?.dispose();
+    if (_unrealDaemonManager != null) {
+      _unrealDaemonManager!.activeProcess?.kill();
+    }
     super.dispose();
   }
 
