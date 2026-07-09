@@ -13,7 +13,7 @@
   "Plugins": [
     {
       "Name": "CesiumForUnreal",
-      "Enabled": true,
+      "Enabled": false,
       "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/87b0d05b00b34e0fb496aa21d507b61a"
     }
   ]
