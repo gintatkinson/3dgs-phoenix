@@ -18,6 +18,8 @@ cp -R "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Saved/Cooked/Mac" "$APP_BUND
 echo "=== 5. Copying Dependent Shared Libraries ==="
 cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libmetalirconverter.dylib" "$APP_BUNDLE/Contents/Frameworks/libmetalirconverter.dylib"
 cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libmetalirconverter.dylib" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libmetalirconverter.dylib"
+cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbb.12.dylib" "$APP_BUNDLE/Contents/Frameworks/libtbb.12.dylib"
+cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbb.12.dylib" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbb.12.dylib"
 
 echo "=== 6. Packaging into .dmg Installer ==="
 hdiutil create -volname "3DGS-Phoenix" -srcfolder "$APP_BUNDLE" -ov -format UDZO "/Users/perkunas/jail/3dgs-phoenix/app_flutter/build/macos/Build/Products/Release/3DGS-Phoenix.dmg"
