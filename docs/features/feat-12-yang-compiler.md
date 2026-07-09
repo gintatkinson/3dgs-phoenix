@@ -15,32 +15,36 @@ issue_id: 54
 ## Description
 Details the DevOps compilation pipeline parsing OpenConfig YANG schemas into platform-agnostic JSON schemas mapping types, lists, leaves, ranges, and patterns with absolute XPaths as keys.
 
-## UML Class/Component Diagram
+## UML Class Diagram
 ```mermaid
 classDiagram
+    class AST
+    class ASTNode
     class YangCompiler {
-        +parseYangFile(filePath: String) AST
-        +walkAST(node: ASTNode) List~AttributeDefinition~
-        +generateAbsoluteXPath(node: ASTNode) String
-        +mapYangType(yangType: String) String
-        +writeLuiJson(outputPath: String) void
+        +parseYangFile(filePath : String) AST [1]
+        +walkAST(node : ASTNode) AttributeDefinition [0..*]
+        +generateAbsoluteXPath(node : ASTNode) String [1]
+        +mapYangType(yangType : String) String [1]
+        +writeLuiJson(outputPath : String) Boolean [1]
     }
     class AttributeDefinition {
-        +String key
-        +String label
-        +String type
-        +String sectionGroup
-        +List~String~ options
-        +Boolean isRequired
-        +String regexPattern
-        +num minValue
-        +num maxValue
+        +key : String [1]
+        +label : String [1]
+        +type : String [1]
+        +sectionGroup : String [1]
+        +options : String [0..*]
+        +isRequired : Boolean [1]
+        +regexPattern : String [0..1]
+        +minValue : Real [0..1]
+        +maxValue : Real [0..1]
     }
     YangCompiler --> AttributeDefinition : generates
+    YangCompiler --> AST : uses
+    YangCompiler --> ASTNode : uses
 ```
 
 ## Interface Requirements
-### 1. Payload Schema
+### 1. Test Data Shape
 The output JSON schema (`logical-layout.json`) is structured as a collection of AttributeDefinitions:
 ```json
 {
@@ -67,6 +71,6 @@ The output JSON schema (`logical-layout.json`) is structured as a collection of 
 6. The absolute XPath is set as the unique identifier (`key`) for each mapped attribute.
 7. The compiled platform-agnostic JSON layout is saved to disk for runtime consumption.
 
-### 4. Logical Exception States & Validation Failures
+### 4. Interactive Flow & States
 1. YANG Syntax Error: If the source `.yang` file contains semantic or syntactic errors, the compiler prints compilation diagnostics to stdout and exits with code 1, halting the build.
 2. Duplicate XPath: If two leaves resolve to the same absolute XPath, the compiler flags a duplication exception and aborts.

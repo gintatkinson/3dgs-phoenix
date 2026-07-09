@@ -15,23 +15,33 @@ issue_id: 56
 ## Description
 Details the AST check rules preventing infinite rendering loop triggers and the CSS/Impeller repaint boundaries to isolate reflow events.
 
-## UML Class/Component Diagram
+## UML Class Diagram
 ```mermaid
 classDiagram
+    class UserEvent
+    class TelemetryData
+    class Component
+    class RepaintBoundary
+    class DOMElement
     class EventEchoGuard {
-        +Boolean isProcessingProgrammaticChange
-        +onUserInteraction(event: UserEvent) void
-        +onProgrammaticUpdate(data: TelemetryData) void
+        +isProcessingProgrammaticChange : Boolean [1]
+        +onUserInteraction(event : UserEvent) Boolean [1]
+        +onProgrammaticUpdate(data : TelemetryData) Boolean [1]
     }
     class RepaintBoundaryManager {
-        +wrapWithRepaintBoundary(component: Component) RepaintBoundary
-        +updateCSSVariablesDirectly(element: DOMElement, width: int) void
+        +wrapWithRepaintBoundary(component : Component) RepaintBoundary [1]
+        +updateCSSVariablesDirectly(element : DOMElement, width : Integer) Boolean [1]
     }
     EventEchoGuard --> RepaintBoundaryManager : isolates updates
+    EventEchoGuard --> UserEvent : uses
+    EventEchoGuard --> TelemetryData : uses
+    RepaintBoundaryManager --> Component : uses
+    RepaintBoundaryManager --> RepaintBoundary : uses
+    RepaintBoundaryManager --> DOMElement : uses
 ```
 
 ## Interface Requirements
-### 1. Payload Schema
+### 1. Test Data Shape
 For DOM operations updating CSS layouts directly without triggering component re-renders:
 ```json
 {
@@ -44,7 +54,7 @@ For DOM operations updating CSS layouts directly without triggering component re
 }
 ```
 
-### 3. Logical Operations & Interface Messages
+### 3. Visual Layout & Arrangement
 1. Bi-directional components initialize (e.g. TopologyMap and HierarchyTree).
 2. The user interacts with a widget, triggering a user-hardware event (`onSelect` or `onChange`).
 3. The EventEchoGuard flags the event source as user-originated, enabling propagation to other components.
@@ -52,6 +62,6 @@ For DOM operations updating CSS layouts directly without triggering component re
 5. While `isProcessingProgrammaticChange` is active, any secondary output event trigger or callback is blocked, breaking the circular rendering storm loop.
 6. Repaint boundaries isolate dragging and resizing reflow operations (via CSS custom variables in web, or `RepaintBoundary` in Flutter) so the full layout tree is not repainted.
 
-### 4. Logical Exception States & Validation Failures
+### 4. Interactive Flow & States
 1. Circular Loop Detected: If the same event propagates back to the originating component within the same lifecycle frame, an AST lint check or runtime warning halts the execution trace to prevent browser freezing.
 2. Reflow Budget Overrun: If a resize event triggers full page repaint, layout diagnostics flag performance degradation.

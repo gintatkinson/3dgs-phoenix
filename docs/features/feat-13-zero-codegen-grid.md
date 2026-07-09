@@ -15,33 +15,33 @@ issue_id: 55
 ## Description
 Details the generic property grid presentation shell reading JSON schemas at runtime and dynamically instantiating input widgets.
 
-## UML Class/Component Diagram
+## UML Class Diagram
 ```mermaid
 classDiagram
     class PropertyGrid {
-        +List~AttributeDefinition~ attributes
-        +Map~String, dynamic~ initialValues
-        +Function onSave
-        +didUpdateWidget() void
+        +attributes : AttributeDefinition [0..*]
+        +initialValues : String [1]
+        +onSave : String [1]
+        +didUpdateWidget() Boolean [1]
     }
     class AttributeDefinition {
-        +String key
-        +String label
-        +String type
-        +String sectionGroup
-        +List~String~ options
-        +Boolean isRequired
-        +String regexPattern
-        +num minValue
-        +num maxValue
+        +key : String [1]
+        +label : String [1]
+        +type : String [1]
+        +sectionGroup : String [1]
+        +options : String [0..*]
+        +isRequired : Boolean [1]
+        +regexPattern : String [0..1]
+        +minValue : Real [0..1]
+        +maxValue : Real [0..1]
     }
     class FormFieldFactory {
-        +buildWidget(config: AttributeDefinition, value: dynamic) FormFieldWidget
+        +buildWidget(config : AttributeDefinition, value : String) FormFieldWidget [1]
     }
     class FormFieldWidget {
-        +AttributeDefinition config
-        +dynamic value
-        +validate() Boolean
+        +config : AttributeDefinition [1]
+        +value : String [1]
+        +validate() Boolean [1]
     }
     PropertyGrid *-- FormFieldFactory : uses
     FormFieldFactory --> FormFieldWidget : instantiates
@@ -49,7 +49,7 @@ classDiagram
 ```
 
 ## Interface Requirements
-### 1. Payload Schema
+### 1. Test Data Shape
 Uses the output schema of the compiler (`logical-layout.json`) loaded dynamically at startup:
 ```json
 {
@@ -67,7 +67,7 @@ Uses the output schema of the compiler (`logical-layout.json`) loaded dynamicall
 }
 ```
 
-### 3. Logical Operations & Interface Messages
+### 3. Visual Layout & Arrangement
 1. UI launches and loads the dynamic JSON layout schema mapping attributes.
 2. `PropertyGrid` is initialized with the attributes list and initial values map.
 3. `FormFieldFactory` walks the configuration list and instantiates form widgets depending on `type` (e.g., `Dropdown` for enum, `TextField` for string, `NumberField` for double/int).
@@ -75,6 +75,6 @@ Uses the output schema of the compiler (`logical-layout.json`) loaded dynamicall
 5. Dynamic input changes update local state and validate inputs against `isRequired`, `regexPattern`, `minValue`, and `maxValue` constraints.
 6. Focus-loss triggers the `onSave` callback to write the validated delta back to the local database repository.
 
-### 4. Logical Exception States & Validation Failures
+### 4. Interactive Flow & States
 1. Out of Bounds Value: If a numeric input violates `minValue` or `maxValue`, validation fails, error feedback is highlighted on the widget, and saving is blocked.
 2. Invalid Pattern: If string input fails the `regexPattern` match, input is flagged as invalid, and focus-loss saving is bypassed or logs validation failure.

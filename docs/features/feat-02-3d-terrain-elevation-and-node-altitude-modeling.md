@@ -18,18 +18,50 @@ Enables dynamic 3D terrain elevation and ground node altitude modeling in the 3D
 ## UML Class Diagram
 ```mermaid
 classDiagram
-    class Scene3DViewportPainter {
-        +bool elevationActive
-        +double getElevation(latDeg : Real, lngDeg : Real) Real [1]
-        +paint(canvas : Canvas, size : Size) void
-        +project(lat : Real, lng : Real, height : Real, center : Offset, rotationY : Real, tilt : Real, size : Size) ProjectedPoint
-    }
+    class Offset
+    class Size
+    class Canvas
     class ProjectedPoint {
-        +Offset offset
-        +Real z
+        +offset : Offset [1]
+        +z : Real [1]
     }
-    Scene3DViewportPainter ..> ProjectedPoint : projects
+    class Scene3DViewportPainter {
+        +elevationActive : Boolean [1]
+        +getElevation(latDeg : Real, lngDeg : Real) Real [1]
+        +paint(canvas : Canvas, size : Size) Boolean [1]
+        +project(lat : Real, lng : Real, height : Real, center : Offset, rotationY : Real, tilt : Real, size : Size) ProjectedPoint [1]
+    }
+    Scene3DViewportPainter --> ProjectedPoint : projects
+    Scene3DViewportPainter --> Offset : uses
+    Scene3DViewportPainter --> Size : uses
+    Scene3DViewportPainter --> Canvas : uses
+    ProjectedPoint --> Offset : uses
 ```
+
+## Interface Requirements
+
+### 1. Test Data Shape
+A JSON payload representing terrain amplification and nodes elevation parameters (refer to Scenario 1 / 2):
+```json
+{
+  "terrainAmplification": 80.0,
+  "nodeElevationAmplification": 2000.0,
+  "nodes": [
+    {
+      "id": "Mount-Fuji-Node",
+      "latitude": 35.3606,
+      "longitude": 138.7274,
+      "localBuildingHeight": 50.0
+    }
+  ]
+}
+```
+
+### 3. Visual Layout & Arrangement
+Details the `TopographicalView` widget class mounted within the `topology_pane` layout partition, explicit CSS container sizes (`contain: layout paint;`).
+
+### 4. Interactive Flow & States
+Details the `3D SURFACE ELEVATION` toggle state and camera projection.
 
 ## Given-When-Then Acceptance Criteria
 

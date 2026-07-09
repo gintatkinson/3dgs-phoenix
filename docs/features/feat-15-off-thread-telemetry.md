@@ -15,22 +15,29 @@ issue_id: 57
 ## Description
 Details the background worker/isolate implementation, unpacking gNMI streams and micro-batching deduplicated updates every 100ms.
 
-## UML Class/Component Diagram
+## UML Class Diagram
 ```mermaid
 classDiagram
+    class TelemetryPacket
+    class ByteData
+    class StateStore
     class TelemetryWorker {
-        +String gNmiEndpoint
-        +List~TelemetryPacket~ batchBuffer
-        +connectgNMI() void
-        +unpackProtobuf(payload: ByteData) TelemetryPacket
-        +deduplicateUpdates() List~TelemetryPacket~
-        +dispatchBatch() void
+        +gNmiEndpoint : String [1]
+        +batchBuffer : TelemetryPacket [0..*]
+        +connectgNMI() Boolean [1]
+        +unpackProtobuf(payload : ByteData) TelemetryPacket [1]
+        +deduplicateUpdates() TelemetryPacket [0..*]
+        +dispatchBatch() Boolean [1]
     }
     class MainThreadBroker {
-        +receiveBatch(batch: List~TelemetryPacket~) void
-        +applyToStore(store: StateStore) void
+        +receiveBatch(batch : TelemetryPacket [0..*]) Boolean [1]
+        +applyToStore(store : StateStore) Boolean [1]
     }
-    TelemetryWorker --> MainThreadBroker : posts message (JSON delta batch)
+    TelemetryWorker --> MainThreadBroker : posts message
+    TelemetryWorker --> TelemetryPacket : uses
+    TelemetryWorker --> ByteData : uses
+    MainThreadBroker --> TelemetryPacket : uses
+    MainThreadBroker --> StateStore : uses
 ```
 
 ## Interface Requirements
