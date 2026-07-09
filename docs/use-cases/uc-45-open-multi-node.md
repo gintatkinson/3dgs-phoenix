@@ -90,9 +90,9 @@ stateDiagram-v2
 ## 8. Realization Matrix
 
 ### Required User Stories
-- [ ] #256 - [CommandLine Scene Argument Routing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-1-boot-args.md) (Ensures proper parsing of startup command-line arguments to trigger scene boot)
-- [ ] #257 - [Fault-Segregated Scene Communication via UDS](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-2-grpc-uds.md) (Provides secure, fault-segregated process communication channel)
-- [ ] #258 - [macOS Dock Icon Supression Compliance](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-3-mac-dock.md) (Prevents dock clutter on macOS platforms)
+- [x] #256 - [CommandLine Scene Argument Routing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-1-boot-args.md) (Ensures proper parsing of startup command-line arguments to trigger scene boot)
+- [x] #257 - [Fault-Segregated Scene Communication via UDS](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-2-grpc-uds.md) (Provides secure, fault-segregated process communication channel)
+- [x] #258 - [macOS Dock Icon Supression Compliance](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-3-mac-dock.md) (Prevents dock clutter on macOS platforms)
 
 ### Required Features
 - [x] #250 - [Feature 45: Isolated Scene Boot](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-45-isolated-scene-boot.md) (Coordinates the startup and lifecycle of isolated render processes)

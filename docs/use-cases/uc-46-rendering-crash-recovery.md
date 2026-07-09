@@ -112,10 +112,10 @@ stateDiagram-v2
 ## 8. Realization Matrix
 
 ### Required User Stories
-- [ ] #259 - [Headless Unreal Daemon Orchestration & Spawn Monitoring](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-46-1-spawn-monitoring.md) (Handles background daemon launching and exit signal tracking)
-- [ ] #260 - [Windows DXGI VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-47-1-dx12-vram-sharing.md) (Enables zero-copy DirectX 12 graphics interop on Windows host)
-- [ ] #261 - [macOS Metal/IOSurface VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-48-1-metal-vram-sharing.md) (Enables zero-copy IOSurface frame mapping on Apple Silicon/macOS)
-- [ ] #262 - [Linux Vulkan External Memory VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-49-1-vulkan-vram-sharing.md) (Enables Vulkan external memory FD transfer on Linux)
+- [x] #259 - [Headless Unreal Daemon Orchestration & Spawn Monitoring](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-46-1-spawn-monitoring.md) (Handles background daemon launching and exit signal tracking)
+- [x] #260 - [Windows DXGI VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-47-1-dx12-vram-sharing.md) (Enables zero-copy DirectX 12 graphics interop on Windows host)
+- [x] #261 - [macOS Metal/IOSurface VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-48-1-metal-vram-sharing.md) (Enables zero-copy IOSurface frame mapping on Apple Silicon/macOS)
+- [x] #262 - [Linux Vulkan External Memory VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-49-1-vulkan-vram-sharing.md) (Enables Vulkan external memory FD transfer on Linux)
 
 ### Required Features
 - [x] #251 - [Feature 46: Headless Unreal Daemon Orchestration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-46-headless-orchestration.md) (Spawns and monitors the offscreen renderer)

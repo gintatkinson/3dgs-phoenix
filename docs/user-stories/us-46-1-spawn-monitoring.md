@@ -9,7 +9,7 @@ epic: "Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 # User Story US-46-1: Headless Unreal Daemon Orchestration & Spawn Monitoring
 
 ## Parent Epic
-- [ ] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)
+- [x] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)
 
 ## Domain Object Mapping
 - **Primary Domain Objects:** UnrealDaemonManager, ProcessWatcher

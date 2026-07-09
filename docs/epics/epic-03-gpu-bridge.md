@@ -20,14 +20,14 @@ This Epic governs the zero-copy, hardware-accelerated 3D graphics texture bridge
 ### Associated Use Cases & User Stories
 
 #### Associated Use Cases
-- [ ] #269 - [UC-3: Handling an Unreal Engine Rendering Crash and seamless hot-swap](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-46-rendering-crash-recovery.md) (semantic linkage justification)
+- [x] #269 - [UC-3: Handling an Unreal Engine Rendering Crash and seamless hot-swap](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-46-rendering-crash-recovery.md) (semantic linkage justification)
 None identified at this time.
 
 #### Associated User Stories
-- [ ] #259 - [Headless Unreal Daemon Orchestration & Spawn Monitoring](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-46-1-spawn-monitoring.md) (semantic linkage justification)
-- [ ] #260 - [Windows DXGI VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-47-1-dx12-vram-sharing.md) (semantic linkage justification)
-- [ ] #261 - [macOS Metal/IOSurface VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-48-1-metal-vram-sharing.md) (semantic linkage justification)
-- [ ] #262 - [Linux Vulkan External Memory VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-49-1-vulkan-vram-sharing.md) (semantic linkage justification)
+- [x] #259 - [Headless Unreal Daemon Orchestration & Spawn Monitoring](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-46-1-spawn-monitoring.md) (semantic linkage justification)
+- [x] #260 - [Windows DXGI VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-47-1-dx12-vram-sharing.md) (semantic linkage justification)
+- [x] #261 - [macOS Metal/IOSurface VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-48-1-metal-vram-sharing.md) (semantic linkage justification)
+- [x] #262 - [Linux Vulkan External Memory VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-49-1-vulkan-vram-sharing.md) (semantic linkage justification)
 None identified at this time.
 
 ## 3. Architecture

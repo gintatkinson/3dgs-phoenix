@@ -9,7 +9,7 @@ epic: "Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)"
 # User Story US-49-1: Linux Vulkan External Memory VRAM Sharing
 
 ## Parent Epic
-- [ ] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)
+- [x] #248 - [Epic 3: Enterprise 3D Rendering (Zero-Copy GPU Texture Bridge)](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-03-gpu-bridge.md) (Provides zero-copy texture sharing and headless renderer orchestration)
 
 ## Domain Object Mapping
 - **Primary Domain Objects:** LinuxVulkanBridge, VulkanExternalMemory

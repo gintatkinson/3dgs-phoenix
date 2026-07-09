@@ -17,13 +17,13 @@ This Epic governs the windowing and process lifecycle management of the 3DGS Pho
 ### Associated Use Cases & User Stories
 
 #### Associated Use Cases
-- [ ] #268 - [UC-1: Opening a Multi-Node Topology View](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-45-open-multi-node.md) (semantic linkage justification)
+- [x] #268 - [UC-1: Opening a Multi-Node Topology View](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/use-cases/uc-45-open-multi-node.md) (semantic linkage justification)
 None identified at this time.
 
 #### Associated User Stories
-- [ ] #256 - [CommandLine Scene Argument Routing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-1-boot-args.md) (semantic linkage justification)
-- [ ] #257 - [Fault-Segregated Scene Communication via UDS](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-2-grpc-uds.md) (semantic linkage justification)
-- [ ] #258 - [macOS Dock Icon Supression Compliance](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-3-mac-dock.md) (semantic linkage justification)
+- [x] #256 - [CommandLine Scene Argument Routing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-1-boot-args.md) (semantic linkage justification)
+- [x] #257 - [Fault-Segregated Scene Communication via UDS](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-2-grpc-uds.md) (semantic linkage justification)
+- [x] #258 - [macOS Dock Icon Supression Compliance](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-3-mac-dock.md) (semantic linkage justification)
 None identified at this time.
 
 ## 3. Architecture

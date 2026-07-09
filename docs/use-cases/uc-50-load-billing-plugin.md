@@ -98,11 +98,11 @@ stateDiagram-v2
 ## 8. Realization Matrix
 
 ### Required User Stories
-- [ ] #263 - [Wasmtime Engine Initialization and Cranelift JIT Configuration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-1-jit-init.md) (Implements Wasmtime JIT initialization)
-- [ ] #264 - [WASI Filesystem Sandboxing and Capability Allocation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-2-fs-sandbox.md) (Restricts filesystem capabilities)
-- [ ] #265 - [WASI Network Capability Isolation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-3-net-sandbox.md) (Disables/isolates network capabilities)
-- [ ] #266 - [WIT Bindgen data streaming type validation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-4-wit-validation.md) (Enforces WIT bindgen interfaces)
-- [ ] #267 - [Asynchronous FFI batching queue execution](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-5-ffi-batching.md) (Aggressively batches FFI commands to prevent render loop lag)
+- [x] #263 - [Wasmtime Engine Initialization and Cranelift JIT Configuration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-1-jit-init.md) (Implements Wasmtime JIT initialization)
+- [x] #264 - [WASI Filesystem Sandboxing and Capability Allocation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-2-fs-sandbox.md) (Restricts filesystem capabilities)
+- [x] #265 - [WASI Network Capability Isolation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-3-net-sandbox.md) (Disables/isolates network capabilities)
+- [x] #266 - [WIT Bindgen data streaming type validation](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-4-wit-validation.md) (Enforces WIT bindgen interfaces)
+- [x] #267 - [Asynchronous FFI batching queue execution](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-5-ffi-batching.md) (Aggressively batches FFI commands to prevent render loop lag)
 
 ### Required Features
 - [x] #255 - [Feature 50: Wasm Extensibility Subsystem](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-50-wasm-extensibility.md) (Provides sandboxed runtime and component model extensibility)

@@ -9,7 +9,7 @@ epic: "Epic 4: WebAssembly Component Model Extensibility Epic"
 # User Story US-50-2: WASI Filesystem Sandboxing and Capability Allocation
 
 ## Parent Epic
-- [ ] #249 - [Epic 4: WebAssembly Component Model Extensibility Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-04-wasm-extensibility.md) (Aggregates Wasmtime integration and WIT component interfaces)
+- [x] #249 - [Epic 4: WebAssembly Component Model Extensibility Epic](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/epics/epic-04-wasm-extensibility.md) (Aggregates Wasmtime integration and WIT component interfaces)
 
 ## Domain Object Mapping
 - **Primary Domain Objects:** WasmtimeEngine, WasiConfigurator
