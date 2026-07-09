@@ -49,3 +49,24 @@ This plan covers editing the Unreal Target configuration files to use an overrid
 ## Verification Plan for Unreal Daemon
 
 1. Run static analysis via `flutter analyze` in `app_flutter/` to verify no errors exist.
+
+## Project Packaging and Installation
+
+### Component: Packaging Script
+
+#### [CREATE] [package_app.sh](file:///Users/perkunas/jail/3dgs-phoenix/scripts/package_app.sh)
+- A shell script to compile the Flutter macOS app in Release mode, copy cesium_daemon and dependent libraries, and build a DMG installer using hdiutil.
+
+### Component: Installation Guide
+
+#### [CREATE] [INSTALL.md](file:///Users/perkunas/jail/3dgs-phoenix/INSTALL.md)
+- Markdown guide explaining prerequisites, installation, and launch instructions for the 3DGS Phoenix app.
+
+---
+
+## Verification Plan for Packaging and Installation
+1. Execute `scripts/package_app.sh` and verify it runs to completion successfully.
+2. Verify that `app_flutter/build/macos/Build/Products/Release/3DGS-Phoenix.dmg` is generated.
+3. Verify `INSTALL.md` is correctly formatted.
+4. Push all changes to remote and verify `git diff origin/main` is empty.
+
