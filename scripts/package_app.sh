@@ -45,6 +45,9 @@ codesign --force -s - "$APP_BUNDLE/Contents/Frameworks/libtbbmalloc.2.dylib"
 codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbbmalloc.2.dylib"
 codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/cesium_daemon"
 
-echo "=== 7. Packaging into .dmg Installer ==="
+echo "=== 7. Re-signing Entire App Bundle ==="
+codesign --force -s - "$APP_BUNDLE"
+
+echo "=== 8. Packaging into .dmg Installer ==="
 hdiutil create -volname "3DGS-Phoenix" -srcfolder "$APP_BUNDLE" -ov -format UDZO "/Users/perkunas/jail/3dgs-phoenix/app_flutter/build/macos/Build/Products/Release/3DGS-Phoenix.dmg"
 echo "=== Packaging Complete ==="

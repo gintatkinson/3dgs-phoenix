@@ -87,15 +87,20 @@ class UnrealDaemonManager {
 
     try {
       _log?.call('Spawning Unreal daemon: $unrealPath with -RenderOffscreen');
+      final savedPath = '${Directory.systemTemp.path}/cesium_daemon_saved';
+      try {
+        Directory(savedPath).createSync(recursive: true);
+      } catch (_) {}
+      
       final Process process;
       if (workingDirectory != null && _spawnProcess == _defaultSpawn) {
         process = await Process.start(
           unrealPath,
-          const ['-RenderOffscreen'],
+          ['-RenderOffscreen', '-SavedDir=$savedPath'],
           workingDirectory: workingDirectory,
         );
       } else {
-        process = await _spawnProcess(unrealPath, const ['-RenderOffscreen']);
+        process = await _spawnProcess(unrealPath, ['-RenderOffscreen', '-SavedDir=$savedPath']);
       }
       _process = process;
       _watcher = ProcessWatcher(process);

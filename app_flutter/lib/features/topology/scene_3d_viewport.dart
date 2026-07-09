@@ -94,9 +94,9 @@ class Scene3DViewportState extends State<Scene3DViewport> {
       try {
         await _unrealDaemonManager!.spawnDaemon(targetPath, workingDirectory: workingDirectory);
         _unrealDaemonManager!.monitorDaemon();
-        _frameUpdateTimer = Timer.periodic(const Duration(milliseconds: 33), (timer) {
-          _textureController.updateFrame(140735492982848);
-        });
+        // _frameUpdateTimer = Timer.periodic(const Duration(milliseconds: 33), (timer) {
+        //   _textureController.updateFrame(140735492982848);
+        // });
       } catch (e) {
         debugPrint('[UnrealDaemon] Failed to spawn daemon: $e');
       }
