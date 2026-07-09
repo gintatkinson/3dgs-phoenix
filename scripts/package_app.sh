@@ -30,11 +30,19 @@ cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbb.12.dylib" "
 rm -f "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbb.12.dylib"
 cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbb.12.dylib" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbb.12.dylib"
 
+rm -f "$APP_BUNDLE/Contents/Frameworks/libtbbmalloc.2.dylib"
+cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbbmalloc.2.dylib" "$APP_BUNDLE/Contents/Frameworks/libtbbmalloc.2.dylib"
+
+rm -f "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbbmalloc.2.dylib"
+cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbbmalloc.2.dylib" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbbmalloc.2.dylib"
+
 echo "=== 6. Codesigning Helper Executables and Libraries ==="
 codesign --force -s - "$APP_BUNDLE/Contents/Frameworks/libmetalirconverter.dylib"
 codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libmetalirconverter.dylib"
 codesign --force -s - "$APP_BUNDLE/Contents/Frameworks/libtbb.12.dylib"
 codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbb.12.dylib"
+codesign --force -s - "$APP_BUNDLE/Contents/Frameworks/libtbbmalloc.2.dylib"
+codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbbmalloc.2.dylib"
 codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/cesium_daemon"
 
 echo "=== 7. Packaging into .dmg Installer ==="
