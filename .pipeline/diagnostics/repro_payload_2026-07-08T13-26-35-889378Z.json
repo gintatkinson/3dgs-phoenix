@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-07-08T13:26:35.889378Z",
+  "tooling": {
+    "name": "parity_auditor",
+    "version": "1.0.0"
+  },
+  "context": {
+    "command": "/Users/perkunas/jail/3dgs-phoenix/.agents/skills/spec-orchestrator/scripts/verify_model_coverage.py --spec-only",
+    "exit_code": 1,
+    "downstream_repo": "git@github.com:gintatkinson/3dgs-phoenix.git",
+    "commit_hash": "9546d0bcf121355685098936fe9f5904d7ba2351"
+  },
+  "failure": {
+    "traceback": "",
+    "error_summary": [
+      "Feature feat-16-gpu-topology.md is missing section '## UML Class Diagram'.",
+      "Feature feat-16-gpu-topology.md is missing section '### 1. Test Data Shape'.",
+      "Feature feat-16-gpu-topology.md is missing section '### 3. Visual Layout & Arrangement'.",
+      "Feature feat-16-gpu-topology.md is missing section '### 4. Interactive Flow & States'.",
+      "Feature feat-15-off-thread-telemetry.md is missing section '## UML Class Diagram'.",
+      "Feature feat-44-downstream-baseline.md contains class 'FirestoreRepositoryAdapter' with zero relationships. Isolated classes are prohibited.",
+      "Feature feat-44-downstream-baseline.md contains a disconnected UML Class Diagram. Classes ['FirestoreRepositoryAdapter'] are not structurally connected to 'PersistenceBootstrap'.",
+      "Feature feat-44-downstream-baseline.md class 'FirestoreRepositoryAdapter' attribute 'db' has invalid type 'FirestoreInstance'. UML primitive types must be Boolean, Decimal64, Integer, Real, String (case-sensitive), or reference another class.",
+      "Feature feat-44-downstream-baseline.md class 'AbstractRepository' method 'fetchNodes' is missing a multiplicity (e.g. [1], [0..1], [0..*]) in its return signature.",
+      "Feature feat-44-downstream-baseline.md class 'FirestoreRepositoryAdapter' attribute 'db' is missing a multiplicity (e.g. [1], [0..1], [0..*]).",
+      "Feature feat-44-downstream-baseline.md class 'FirestoreRepositoryAdapter' method 'fetchNodes' is missing a multiplicity (e.g. [1], [0..1], [0..*]) in its return signature.",
+      "Feature feat-44-downstream-baseline.md class 'ComplianceValidator' method 'validateSchema' is missing a multiplicity (e.g. [1], [0..1], [0..*]) in its return signature.",
+      "Feature feat-44-downstream-baseline.md class 'ComplianceValidator' method 'verifyLiveConnection' is missing a multiplicity (e.g. [1], [0..1], [0..*]) in its return signature.",
+      "Feature feat-02-3d-terrain-elevation-and-node-altitude-modeling.md is missing section '## Interface Requirements'.",
+      "Feature feat-02-3d-terrain-elevation-and-node-altitude-modeling.md is missing section '### 1. Test Data Shape'.",
+      "Feature feat-02-3d-terrain-elevation-and-node-altitude-modeling.md is missing section '### 3. Visual Layout & Arrangement'.",
+      "Feature feat-02-3d-terrain-elevation-and-node-altitude-modeling.md is missing section '### 4. Interactive Flow & States'.",
+      "Feature feat-13-zero-codegen-grid.md is missing section '## UML Class Diagram'.",
+      "Feature feat-13-zero-codegen-grid.md is missing section '### 1. Test Data Shape'.",
+      "Feature feat-13-zero-codegen-grid.md is missing section '### 3. Visual Layout & Arrangement'.",
+      "Feature feat-13-zero-codegen-grid.md is missing section '### 4. Interactive Flow & States'.",
+      "Feature feat-14-event-echo-guard.md is missing section '## UML Class Diagram'.",
+      "Feature feat-14-event-echo-guard.md is missing section '### 1. Test Data Shape'.",
+      "Feature feat-14-event-echo-guard.md is missing section '### 3. Visual Layout & Arrangement'.",
+      "Feature feat-14-event-echo-guard.md is missing section '### 4. Interactive Flow & States'.",
+      "Feature feat-12-yang-compiler.md is missing section '## UML Class Diagram'.",
+      "Feature feat-12-yang-compiler.md is missing section '### 1. Test Data Shape'.",
+      "Feature feat-12-yang-compiler.md is missing section '### 4. Interactive Flow & States'."
+    ]
+  },
+  "reproduction_case": {
+    "target_file": "",
+    "snippet_type": "text",
+    "snippet_content": ""
+  }
+}
