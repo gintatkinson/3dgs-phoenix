@@ -17,6 +17,19 @@ echo "=== 4. Copying Cooked Assets ==="
 rm -rf "$APP_BUNDLE/Contents/Resources/Saved/Cooked/Mac"
 cp -R "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Saved/Cooked/Mac" "$APP_BUNDLE/Contents/Resources/Saved/Cooked/Mac"
 
+echo "=== 4b. Copying Project Descriptor, Config and ICU Data ==="
+cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/cesium_daemon.uproject" "$APP_BUNDLE/Contents/Resources/cesium_daemon.uproject"
+mkdir -p "$APP_BUNDLE/Contents/Resources/Content"
+rm -rf "$APP_BUNDLE/Contents/Resources/Content/Internationalization"
+cp -R "/Users/Shared/Epic Games/UE_5.8/Engine/Content/Internationalization" "$APP_BUNDLE/Contents/Resources/Content/Internationalization"
+
+rm -rf "$APP_BUNDLE/Contents/Resources/Config"
+cp -R "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Config" "$APP_BUNDLE/Contents/Resources/Config"
+
+mkdir -p "$APP_BUNDLE/Contents/Engine"
+rm -rf "$APP_BUNDLE/Contents/Engine/Config"
+cp -R "/Users/Shared/Epic Games/UE_5.8/Engine/Config" "$APP_BUNDLE/Contents/Engine/Config"
+
 echo "=== 5. Copying Dependent Shared Libraries ==="
 rm -f "$APP_BUNDLE/Contents/Frameworks/libmetalirconverter.dylib"
 cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libmetalirconverter.dylib" "$APP_BUNDLE/Contents/Frameworks/libmetalirconverter.dylib"
