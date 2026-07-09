@@ -1,45 +1,47 @@
-# Implementation Plan: Feature 49 (Linux Vulkan External Memory Interop)
+# Implementation Plan: Feature 50 (Wasm Extensibility Subsystem)
 
-This feature implements the Linux Vulkan External Memory Interop bridge classes and verification tests.
+This feature implements the Wasm Extensibility Subsystem in Flutter.
 
 ## Proposed Changes
 
-### Component: Domain & Native Bridge
+### Component: Domain & WASM Subsystem
 
-#### [NEW] [linux_vulkan_bridge.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/domain/cesium_3d/native/linux_vulkan_bridge.dart)
-- Implement `FdExportFailed` implementing `Exception`.
-- Implement `FdImportFailed` implementing `Exception`.
-- Implement `VulkanExternalMemory`:
-  - Fields: `final String extensionName`.
-  - Constructor: `const VulkanExternalMemory({required this.extensionName})`.
-  - Method: `void uses() {}`.
-- Implement `LinuxVulkanBridge`:
-  - Fields: `final bool? _isLinuxOverride`.
-  - Constructor: `const LinuxVulkanBridge({bool? isLinux}) : _isLinuxOverride = isLinux;`
-  - Getter: `bool get _isLinux` to detect Linux platform (falling back to `Platform.isLinux` if override is null).
-  - Method: `int exportMemoryFd()`:
-    - Checks platform: if not on Linux (using `_isLinux`), throws `FdExportFailed`.
-    - Returns mock file descriptor integer `12`.
-  - Method: `bool importMemoryFd(int fd)`:
-    - If `fd <= 0` or `fd == 999` (closed/invalid FD), throws `FdImportFailed`.
+#### [NEW] [wasm_extensibility.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/lib/domain/cesium_3d/wasm/wasm_extensibility.dart)
+- Implement `WasiSandboxViolation` implementing `Exception`.
+- Implement `WitInterfaceMismatch` implementing `Exception`.
+- Implement `WasmtimeEngine`:
+  - `bool initializeEngine()`: returns true.
+  - `bool loadWasmModule(String modulePath)`:
+    - If `modulePath` is empty, returns false.
+    - If `modulePath` does not end with ".wasm", throws `WitInterfaceMismatch`.
     - Returns true.
-  - Method: `bool validatePayload(Map<String, dynamic> payload)`:
-    - Parses and validates payload schema.
-    - Constraints validation:
-      - `vulkanMemoryFd` must be positive and non-zero (throws `FdImportFailed` if <= 0). If it is `999` (closed FD), throws `FdImportFailed`.
-      - `extensionName` must be present and match `"VK_KHR_external_memory_fd"`. If not, throws `FdImportFailed`.
-      - If valid, returns true.
+- Implement `WasiConfigurator`:
+  - `bool configureWasi(List<String> allowedDirs, bool allowNetwork)`:
+    - Checks all paths in `allowedDirs`. If any path does not start with "/tmp", throws `WasiSandboxViolation`.
+    - Returns true.
+- Implement `WitMarshaller`:
+  - `List<int> marshalRecord(String data)`: returns UTF-8 encoded bytes of `data`.
+  - `String unmarshalRecord(List<int> bytes)`: returns UTF-8 decoded string of `bytes`.
+- Implement `AsynchronousBatcher`:
+  - Field: `final List<String> batchQueue = []`.
+  - `bool enqueueCommand(String cmd)`: adds `cmd` to `batchQueue`, returns true.
+  - `void flushBatch()`: clears `batchQueue`.
+- Implement top-level function `bool validatePayload(Map<String, dynamic> payload)`:
+  - If payload lacks "modulePath" or "commands", throws `WitInterfaceMismatch`.
+  - If any directory in `wasiAllowedDirs` (expected to be a list in `payload['wasiAllowedDirs']` or similar field) does not start with "/tmp", throws `WasiSandboxViolation`.
+  - If `allowNetwork` is false (expected in `payload['allowNetwork']`) and the payload simulates a network operation (e.g. contains "network" key or similar command flag is active in `commands`), throws `WasiSandboxViolation`.
+  - Otherwise, returns true.
 
 ---
 
 ### Component: Verification & Test Suite
 
-#### [NEW] [linux_vulkan_interop_test.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/test/cesium_3d/linux_vulkan_interop_test.dart)
-- Add unit tests verifying:
-  - Given the application is running on Linux, the graphics bridge allocates/validates payload with shared file descriptor and extension `"VK_KHR_external_memory_fd"` correctly.
-  - Passing an invalid or closed file descriptor (e.g. `999` or negative) throws a `FdImportFailed` exception.
-  - Verify `exportMemoryFd` behaves correctly under Linux vs non-Linux environments.
-  - Verify fields initialization check on `VulkanExternalMemory`.
+#### [NEW] [wasm_extensibility_test.dart](file:///Users/perkunas/jail/3dgs-phoenix/app_flutter/test/cesium_3d/wasm_extensibility_test.dart)
+- Unit tests verifying:
+  - Wasmtime runtime initialization, and that loading a valid plugin instantiates it within a restricted WASI sandbox (directory starts with "/tmp", network disabled).
+  - Validation that directory paths outside "/tmp" throw `WasiSandboxViolation`.
+  - Scenario 2: enqueuing multiple commands in `AsynchronousBatcher` and clearing them on `flushBatch()`.
+  - Scenario 3: Restricting network capability throws `WasiSandboxViolation` when `allowNetwork: false` and a network operation is simulated in payload.
 
 ---
 
@@ -48,5 +50,5 @@ This feature implements the Linux Vulkan External Memory Interop bridge classes 
 ### Automated Tests
 - Run the newly created test suite:
   ```bash
-  flutter test test/cesium_3d/linux_vulkan_interop_test.dart
+  flutter test test/cesium_3d/wasm_extensibility_test.dart
   ```
