@@ -40,7 +40,7 @@ sequenceDiagram
 ```
 
 ## Required Features
-- [ ] #255 - [Feature 50: Wasm Extensibility Subsystem](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-50-wasm-extensibility.md) (WIT Bindgen data streaming type validation)
+- [x] #255 - [Feature 50: Wasm Extensibility Subsystem](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-50-wasm-extensibility.md) (WIT Bindgen data streaming type validation)
 
 ## Source References
 Structural Schema: `docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md`

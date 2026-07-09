@@ -42,7 +42,7 @@ sequenceDiagram
 ```
 
 ## Required Features
-- [ ] #250 - [Feature 45: Isolated Scene Boot](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-45-isolated-scene-boot.md) (Fault-Segregated Scene Communication via UDS)
+- [x] #250 - [Feature 45: Isolated Scene Boot](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-45-isolated-scene-boot.md) (Fault-Segregated Scene Communication via UDS)
 
 ## Source References
 Structural Schema: `docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md`

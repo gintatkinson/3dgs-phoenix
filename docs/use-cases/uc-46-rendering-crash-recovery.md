@@ -118,7 +118,7 @@ stateDiagram-v2
 - [ ] #262 - [Linux Vulkan External Memory VRAM Sharing](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-49-1-vulkan-vram-sharing.md) (Enables Vulkan external memory FD transfer on Linux)
 
 ### Required Features
-- [ ] #251 - [Feature 46: Headless Unreal Daemon Orchestration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-46-headless-orchestration.md) (Spawns and monitors the offscreen renderer)
-- [ ] #252 - [Feature 47: Windows DXGI Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-47-windows-dxgi-interop.md) (Handles graphics binding for Windows platforms)
-- [ ] #253 - [Feature 48: macOS IOSurface Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-48-macos-iosurface-interop.md) (Handles graphics binding for macOS/Apple Silicon)
-- [ ] #254 - [Feature 49: Linux Vulkan External Memory Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-49-linux-vulkan-interop.md) (Handles graphics binding for Linux platforms)
+- [x] #251 - [Feature 46: Headless Unreal Daemon Orchestration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-46-headless-orchestration.md) (Spawns and monitors the offscreen renderer)
+- [x] #252 - [Feature 47: Windows DXGI Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-47-windows-dxgi-interop.md) (Handles graphics binding for Windows platforms)
+- [x] #253 - [Feature 48: macOS IOSurface Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-48-macos-iosurface-interop.md) (Handles graphics binding for macOS/Apple Silicon)
+- [x] #254 - [Feature 49: Linux Vulkan External Memory Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-49-linux-vulkan-interop.md) (Handles graphics binding for Linux platforms)

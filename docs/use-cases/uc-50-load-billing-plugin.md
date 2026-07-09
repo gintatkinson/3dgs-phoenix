@@ -105,4 +105,4 @@ stateDiagram-v2
 - [ ] #267 - [Asynchronous FFI batching queue execution](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-50-5-ffi-batching.md) (Aggressively batches FFI commands to prevent render loop lag)
 
 ### Required Features
-- [ ] #255 - [Feature 50: Wasm Extensibility Subsystem](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-50-wasm-extensibility.md) (Provides sandboxed runtime and component model extensibility)
+- [x] #255 - [Feature 50: Wasm Extensibility Subsystem](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-50-wasm-extensibility.md) (Provides sandboxed runtime and component model extensibility)

@@ -38,7 +38,7 @@ sequenceDiagram
 ```
 
 ## Required Features
-- [ ] #253 - [Feature 48: macOS IOSurface Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-48-macos-iosurface-interop.md) (macOS Metal/IOSurface VRAM Sharing)
+- [x] #253 - [Feature 48: macOS IOSurface Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-48-macos-iosurface-interop.md) (macOS Metal/IOSurface VRAM Sharing)
 
 ## Source References
 Structural Schema: `docs/architecture/Architecture-spec-Cross-Platform-Rendering-and-WebAssembly.md`

@@ -12,10 +12,10 @@ issue_id: 248
 This Epic governs the zero-copy, hardware-accelerated 3D graphics texture bridge interfacing an offscreen Unreal Engine instance streaming Cesium ion datasets with the host Flutter UI. To achieve stable 60 FPS rendering rates, frames rendered by the Unreal Engine instance must bypass CPU memory copies entirely. The system achieves this by exporting native GPU memory handles (DXGI shared handles on Windows, IOSurfaces on macOS, and Vulkan external memory file descriptors on Linux) and registering them with Flutter's low-level texture registry.
 
 ## 2. Requirements & Checklist
-- [ ] #251 - [Feature 46: Headless Unreal Daemon Orchestration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-46-headless-orchestration.md) (Headless Unreal process management and orchestration)
-- [ ] #252 - [Feature 47: Windows DXGI Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-47-windows-dxgi-interop.md) (Windows DXGI texture interop)
-- [ ] #253 - [Feature 48: macOS IOSurface Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-48-macos-iosurface-interop.md) (macOS IOSurface texture interop)
-- [ ] #254 - [Feature 49: Linux Vulkan External Memory Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-49-linux-vulkan-interop.md) (Linux Vulkan external memory interop)
+- [x] #251 - [Feature 46: Headless Unreal Daemon Orchestration](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-46-headless-orchestration.md) (Headless Unreal process management and orchestration)
+- [x] #252 - [Feature 47: Windows DXGI Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-47-windows-dxgi-interop.md) (Windows DXGI texture interop)
+- [x] #253 - [Feature 48: macOS IOSurface Texture Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-48-macos-iosurface-interop.md) (macOS IOSurface texture interop)
+- [x] #254 - [Feature 49: Linux Vulkan External Memory Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-49-linux-vulkan-interop.md) (Linux Vulkan external memory interop)
 
 ### Associated Use Cases & User Stories
 

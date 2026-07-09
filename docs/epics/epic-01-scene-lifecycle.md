@@ -12,7 +12,7 @@ issue_id: 247
 This Epic governs the windowing and process lifecycle management of the 3DGS Phoenix visualization platform. To prevent graphics and rendering crashes (such as Impeller shader compilation errors or GPU driver lockups) from crashing the entire application, the platform segregates separate UI windows (scenes) into independent operating system processes. Each process hosts a dedicated Flutter engine instance and communicates with the host Global App Coordinator via gRPC Unix Domain Sockets (UDS). On macOS, these spawned scene engines are configured to run as background elements without cluttering the user's dock.
 
 ## 2. Requirements & Checklist
-- [ ] #250 - [Feature 45: Isolated Scene Boot](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-45-isolated-scene-boot.md) (Isolated Scene Bootstrapping and multi-engine process execution)
+- [x] #250 - [Feature 45: Isolated Scene Boot](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-45-isolated-scene-boot.md) (Isolated Scene Bootstrapping and multi-engine process execution)
 
 ### Associated Use Cases & User Stories
 

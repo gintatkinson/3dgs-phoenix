@@ -95,4 +95,4 @@ stateDiagram-v2
 - [ ] #258 - [macOS Dock Icon Supression Compliance](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/user-stories/us-45-3-mac-dock.md) (Prevents dock clutter on macOS platforms)
 
 ### Required Features
-- [ ] #250 - [Feature 45: Isolated Scene Boot](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-45-isolated-scene-boot.md) (Coordinates the startup and lifecycle of isolated render processes)
+- [x] #250 - [Feature 45: Isolated Scene Boot](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-45-isolated-scene-boot.md) (Coordinates the startup and lifecycle of isolated render processes)

@@ -12,7 +12,7 @@ issue_id: 249
 This Epic governs the sandboxed execution subsystem of the 3DGS Phoenix platform. To support custom business logic (e.g., protocol decoding, data conversions, or custom billing calculations) developed by third parties without compromising host OS safety, the platform embeds a WebAssembly (Wasm) runtime using the Wasmtime engine. Plugins execute in a strictly isolated WASI context (restricting filesystem and network access). Communication uses WebAssembly Interface Types (WIT) to handle complex data structures efficiently, and calls are batched to avoid JIT-to-native execution bottlenecks during high-frequency render loops.
 
 ## 2. Requirements & Checklist
-- [ ] #255 - [Feature 50: Wasm Extensibility Subsystem](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-50-wasm-extensibility.md) (Sandboxed Wasm execution engine and WIT component model bindings)
+- [x] #255 - [Feature 50: Wasm Extensibility Subsystem](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-50-wasm-extensibility.md) (Sandboxed Wasm execution engine and WIT component model bindings)
 
 ### Associated Use Cases & User Stories
 
