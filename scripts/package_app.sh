@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+
 echo "=== 1. Building Flutter macOS App in Release Mode ==="
 cd /Users/perkunas/jail/3dgs-phoenix/app_flutter
 flutter build macos --release
@@ -9,13 +10,21 @@ APP_BUNDLE="/Users/perkunas/jail/3dgs-phoenix/app_flutter/build/macos/Build/Prod
 mkdir -p "$APP_BUNDLE/Contents/Resources/Binaries/Mac"
 mkdir -p "$APP_BUNDLE/Contents/Resources/Saved/Cooked"
 
-echo "=== 3. Copying Unreal Daemon Binary ==="
-rm -f "$APP_BUNDLE/Contents/Resources/Binaries/Mac/cesium_daemon"
-cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/cesium_daemon" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/cesium_daemon"
+echo "=== 3. Building Staged Daemon (if needed) ==="
+STAGED_DAEMON="/Users/perkunas/jail/3dgs-phoenix/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app"
+if [ ! -f "$STAGED_DAEMON/Contents/MacOS/cesium_daemon" ]; then
+    echo "Building staged daemon..."
+    /Users/Shared/Epic\ Games/UE_5.8/Engine/Build/BatchFiles/Mac/Build.sh cesium_daemon Mac Development "/Users/perkunas/jail/3dgs-phoenix/app_unreal/cesium_daemon.uproject"
+    /Users/Shared/Epic\ Games/UE_5.8/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun -project="/Users/perkunas/jail/3dgs-phoenix/app_unreal/cesium_daemon.uproject" -platform=Mac -cook -stage -pak -nop4 -SkipCookingEditorContent -unversionedcookedcontent -IgnoreCookErrors
+fi
 
-echo "=== 4. Copying Cooked Assets ==="
-rm -rf "$APP_BUNDLE/Contents/Resources/Saved/Cooked/Mac"
-cp -R "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Saved/Cooked/Mac" "$APP_BUNDLE/Contents/Resources/Saved/Cooked/Mac"
+echo "=== 3b. Copying Staged Daemon Binary ==="
+rm -f "$APP_BUNDLE/Contents/Resources/Binaries/Mac/cesium_daemon"
+cp "$STAGED_DAEMON/Contents/MacOS/cesium_daemon" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/cesium_daemon"
+
+echo "=== 4. Copying Staged UE Content (Paks + Shaders) ==="
+rm -rf "$APP_BUNDLE/Contents/Resources/UE"
+cp -R "$STAGED_DAEMON/Contents/UE" "$APP_BUNDLE/Contents/Resources/UE"
 
 echo "=== 4b. Copying Project Descriptor, Config and ICU Data ==="
 cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/cesium_daemon.uproject" "$APP_BUNDLE/Contents/Resources/cesium_daemon.uproject"
@@ -30,37 +39,10 @@ mkdir -p "$APP_BUNDLE/Contents/Engine"
 rm -rf "$APP_BUNDLE/Contents/Engine/Config"
 cp -R "/Users/Shared/Epic Games/UE_5.8/Engine/Config" "$APP_BUNDLE/Contents/Engine/Config"
 
-echo "=== 5. Copying Dependent Shared Libraries ==="
-rm -f "$APP_BUNDLE/Contents/Frameworks/libmetalirconverter.dylib"
-cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libmetalirconverter.dylib" "$APP_BUNDLE/Contents/Frameworks/libmetalirconverter.dylib"
-
-rm -f "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libmetalirconverter.dylib"
-cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libmetalirconverter.dylib" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libmetalirconverter.dylib"
-
-rm -f "$APP_BUNDLE/Contents/Frameworks/libtbb.12.dylib"
-cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbb.12.dylib" "$APP_BUNDLE/Contents/Frameworks/libtbb.12.dylib"
-
-rm -f "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbb.12.dylib"
-cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbb.12.dylib" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbb.12.dylib"
-
-rm -f "$APP_BUNDLE/Contents/Frameworks/libtbbmalloc.2.dylib"
-cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbbmalloc.2.dylib" "$APP_BUNDLE/Contents/Frameworks/libtbbmalloc.2.dylib"
-
-rm -f "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbbmalloc.2.dylib"
-cp "/Users/perkunas/jail/3dgs-phoenix/app_unreal/Binaries/Mac/libtbbmalloc.2.dylib" "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbbmalloc.2.dylib"
-
-echo "=== 6. Codesigning Helper Executables and Libraries ==="
-codesign --force -s - "$APP_BUNDLE/Contents/Frameworks/libmetalirconverter.dylib"
-codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libmetalirconverter.dylib"
-codesign --force -s - "$APP_BUNDLE/Contents/Frameworks/libtbb.12.dylib"
-codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbb.12.dylib"
-codesign --force -s - "$APP_BUNDLE/Contents/Frameworks/libtbbmalloc.2.dylib"
-codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/libtbbmalloc.2.dylib"
+echo "=== 5. Codesigning ==="
 codesign --force -s - "$APP_BUNDLE/Contents/Resources/Binaries/Mac/cesium_daemon"
-
-echo "=== 7. Re-signing Entire App Bundle ==="
 codesign --force -s - "$APP_BUNDLE"
 
-echo "=== 8. Packaging into .dmg Installer ==="
+echo "=== 6. Packaging into .dmg Installer ==="
 hdiutil create -volname "3DGS-Phoenix" -srcfolder "$APP_BUNDLE" -ov -format UDZO "/Users/perkunas/jail/3dgs-phoenix/app_flutter/build/macos/Build/Products/Release/3DGS-Phoenix.dmg"
 echo "=== Packaging Complete ==="
