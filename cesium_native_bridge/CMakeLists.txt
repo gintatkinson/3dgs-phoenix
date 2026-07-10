@@ -35,6 +35,8 @@ target_include_directories(cesium_native_bridge
     ${CESIUM_NATIVE_DIR}/CesiumAsync/include
     ${CESIUM_NATIVE_DIR}/CesiumCurl/include
     ${CESIUM_NATIVE_DIR}/CesiumIonClient/include
+    ${CESIUM_NATIVE_DIR}/CesiumGltf/include
+    ${CESIUM_NATIVE_DIR}/CesiumGltfWriter/include
 )
 
 target_link_libraries(cesium_native_bridge PRIVATE
@@ -45,6 +47,8 @@ target_link_libraries(cesium_native_bridge PRIVATE
   CesiumAsync
   CesiumCurl
   CesiumIonClient
+  CesiumGltf
+  CesiumGltfWriter
 )
 
 if(APPLE)
