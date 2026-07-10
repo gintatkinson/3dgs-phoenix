@@ -40,5 +40,8 @@ private:
 #if PLATFORM_MAC
 	void* IosurfaceRef = nullptr;
 	void* CurrentPixelBuffer = nullptr;
+	void* MetalDevice = nullptr;
+	void* MetalCommandQueue = nullptr;
+	void* MetalTextureCache = nullptr;
 #endif
 };

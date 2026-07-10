@@ -11,6 +11,8 @@
 #include <CoreVideo/CVPixelBuffer.h>
 #include <CoreVideo/CVPixelBufferIOSurface.h>
 #include <IOSurface/IOSurface.h>
+#include <Metal/Metal.h>
+#include <CoreVideo/CVMetalTextureCache.h>
 #undef FVector
 #endif
 
@@ -99,6 +101,17 @@ void UOffscreenRenderer::Initialize(UWorld* World)
 			{
 				CurrentPixelBuffer = (void*)PixelBuf;
 			}
+
+			id<MTLDevice> Device = MTLCreateSystemDefaultDevice();
+			if (Device)
+			{
+				MetalDevice = (void*)CFBridgingRetain(Device);
+				MetalCommandQueue = (void*)CFBridgingRetain([Device newCommandQueue]);
+
+				CVMetalTextureCacheRef Cache = nullptr;
+				CVMetalTextureCacheCreate(kCFAllocatorDefault, nullptr, Device, nullptr, &Cache);
+				MetalTextureCache = (void*)Cache;
+			}
 		}
 	}
 #endif
@@ -116,6 +129,21 @@ void UOffscreenRenderer::Shutdown()
 	{
 		CFRelease((IOSurfaceRef)IosurfaceRef);
 		IosurfaceRef = nullptr;
+	}
+	if (MetalTextureCache)
+	{
+		CFRelease((CVMetalTextureCacheRef)MetalTextureCache);
+		MetalTextureCache = nullptr;
+	}
+	if (MetalCommandQueue)
+	{
+		CFRelease((CFTypeRef)MetalCommandQueue);
+		MetalCommandQueue = nullptr;
+	}
+	if (MetalDevice)
+	{
+		CFRelease((CFTypeRef)MetalDevice);
+		MetalDevice = nullptr;
 	}
 #endif
 
@@ -138,7 +166,7 @@ void UOffscreenRenderer::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 #if PLATFORM_MAC
 void UOffscreenRenderer::ExportFrameToIosurface()
 {
-	if (!RenderTarget || !IosurfaceRef)
+	if (!RenderTarget || !IosurfaceRef || !MetalDevice || !MetalCommandQueue || !CurrentPixelBuffer)
 	{
 		return;
 	}
@@ -149,31 +177,49 @@ void UOffscreenRenderer::ExportFrameToIosurface()
 		return;
 	}
 
-	TArray<FColor> Pixels;
-	FReadSurfaceDataFlags ReadFlags(RCM_UNorm, CubeFace_MAX);
-	ReadFlags.SetLinearToGamma(false);
-	if (!RTResource->ReadPixels(Pixels, ReadFlags))
+	FRHITexture* RenderTargetRHI = RTResource->GetRenderTargetTexture();
+	if (!RenderTargetRHI)
 	{
 		return;
 	}
 
-	IOSurfaceRef Surface = (IOSurfaceRef)IosurfaceRef;
-	int32 SurfaceWidth = (int32)IOSurfaceGetWidth(Surface);
-	int32 SurfaceHeight = (int32)IOSurfaceGetHeight(Surface);
-	size_t SurfaceRowBytes = IOSurfaceGetBytesPerRow(Surface);
-
-	IOSurfaceLock(Surface, 0, nullptr);
-	uint8* BaseAddr = (uint8*)IOSurfaceGetBaseAddress(Surface);
-	if (BaseAddr && Pixels.Num() >= SurfaceWidth * SurfaceHeight)
+	id<MTLTexture> SourceTexture = (__bridge id<MTLTexture>)RenderTargetRHI->GetNativeResource();
+	if (!SourceTexture)
 	{
-		const uint8* SrcRow = (const uint8*)Pixels.GetData();
-		for (int32 y = 0; y < SurfaceHeight; ++y)
+		return;
+	}
+
+	id<MTLCommandQueue> Queue = (__bridge id<MTLCommandQueue>)MetalCommandQueue;
+	id<MTLCommandBuffer> CmdBuf = [Queue commandBuffer];
+	if (!CmdBuf)
+	{
+		return;
+	}
+
+	id<MTLTexture> DestTexture = nil;
+
+	{
+		CVMetalTextureCacheRef Cache = (CVMetalTextureCacheRef)MetalTextureCache;
+		CVMetalTextureRef DestWrapper = nullptr;
+		CVReturn CVErr = CVMetalTextureCacheCreateTextureFromImage(
+			kCFAllocatorDefault, Cache, (CVPixelBufferRef)CurrentPixelBuffer, nullptr,
+			MTLPixelFormatBGRA8Unorm, SourceTexture.width, SourceTexture.height, 0, &DestWrapper);
+		if (CVErr == kCVReturnSuccess && DestWrapper)
 		{
-			FMemory::Memcpy(BaseAddr, SrcRow, SurfaceWidth * sizeof(FColor));
-			BaseAddr += SurfaceRowBytes;
-			SrcRow += SurfaceWidth * sizeof(FColor);
+			DestTexture = CVMetalTextureGetTexture(DestWrapper);
+			CFRelease(DestWrapper);
 		}
 	}
-	IOSurfaceUnlock(Surface, 0, nullptr);
+
+	if (!DestTexture)
+	{
+		return;
+	}
+
+	id<MTLBlitCommandEncoder> BlitEncoder = [CmdBuf blitCommandEncoder];
+	[BlitEncoder copyFromTexture:SourceTexture toTexture:DestTexture];
+	[BlitEncoder endEncoding];
+	[CmdBuf commit];
+	[CmdBuf waitUntilCompleted];
 }
 #endif
