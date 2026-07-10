@@ -34,6 +34,11 @@ void UOffscreenRenderer::Initialize(UWorld* World)
 		return;
 	}
 
+	if (GetOwner())
+	{
+		RegisterComponent();
+	}
+
 	RenderTarget = NewObject<UTextureRenderTarget2D>(this);
 	RenderTarget->InitAutoFormat(kRenderWidth, kRenderHeight);
 	RenderTarget->UpdateResourceImmediate(true);
@@ -74,6 +79,7 @@ void UOffscreenRenderer::Initialize(UWorld* World)
 		CFDictionarySetValue(Props, kIOSurfaceHeight, NumHeight);
 		CFDictionarySetValue(Props, kIOSurfacePixelFormat, NumFormat);
 		CFDictionarySetValue(Props, kIOSurfaceBytesPerElement, NumBPE);
+		CFDictionarySetValue(Props, kIOSurfaceIsGlobal, kCFBooleanTrue);
 		IOSurfaceRef Surface = IOSurfaceCreate(Props);
 
 		CFRelease(NumWidth);
