@@ -2,6 +2,7 @@
 #include "DaemonGameMode.h"
 #include "OffscreenRenderer.h"
 #include "CesiumGeoreference.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
@@ -10,6 +11,7 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonReader.h"
 #include "Async/Async.h"
+#include "Async/TaskGraphInterfaces.h"
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/select.h>
@@ -283,27 +285,39 @@ FString FDaemonServer::HandleUpdateCamera(const TSharedPtr<FJsonObject>& Json)
 
 	if (GameMode)
 	{
-		ACesiumGeoreference* GeoRef = ACesiumGeoreference::GetDefaultGeoreference(GameMode);
-		if (GeoRef)
-		{
-			FVector UePos = GeoRef->TransformLongitudeLatitudeHeightPositionToUnreal(
-				FVector(Lon, Lat, Alt));
-
-			UWorld* World = GameMode->GetWorld();
-			if (World)
+		FGraphEventRef Task = FFunctionGraphTask::CreateAndDispatchWhenReady(
+			[this, Lat, Lon, Alt, Heading, Pitch, Roll]()
 			{
-				APlayerController* PC = World->GetFirstPlayerController();
-				if (PC)
+				ACesiumGeoreference* GeoRef = ACesiumGeoreference::GetDefaultGeoreference(GameMode);
+				if (!GeoRef) return;
+
+				FVector UePos = GeoRef->TransformLongitudeLatitudeHeightPositionToUnreal(
+					FVector(Lon, Lat, Alt));
+
+				if (GameMode && GameMode->OffscreenRenderer)
 				{
-					if (PC->GetPawn())
+					USceneCaptureComponent2D* Capture = GameMode->OffscreenRenderer->GetSceneCapture();
+					if (Capture)
 					{
-						PC->GetPawn()->SetActorLocation(UePos);
+						Capture->SetWorldLocation(UePos);
 					}
-					FRotator Rot(Pitch, Heading, Roll);
-					PC->SetControlRotation(Rot);
 				}
-			}
-		}
+
+				UWorld* World = GameMode->GetWorld();
+				if (!World) return;
+
+				APlayerController* PC = World->GetFirstPlayerController();
+				if (!PC) return;
+
+				if (PC->GetPawn())
+				{
+					PC->GetPawn()->SetActorLocation(UePos);
+				}
+				PC->SetControlRotation(FRotator(Pitch, Heading, Roll));
+			},
+			TStatId(), nullptr, ENamedThreads::GameThread);
+
+		FTaskGraphInterface::Get().WaitUntilTaskCompletes(Task);
 	}
 
 	return TEXT("{\"type\":\"camera_updated\",\"status\":\"ok\"}");

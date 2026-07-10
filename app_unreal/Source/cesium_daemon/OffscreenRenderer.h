@@ -20,6 +20,7 @@ public:
 	void Shutdown();
 
 	int64 GetIosurfaceId() const { return IosurfaceId; }
+	USceneCaptureComponent2D* GetSceneCapture() const { return SceneCapture; }
 
 #if PLATFORM_MAC
 	void ExportFrameToIosurface();
