@@ -13,6 +13,26 @@ class CesiumEngine {
 
   static CesiumEngine? _instance;
 
+  static NativeCallable<BridgeErrorCallbackNative>? _errorCallable;
+  static NativeCallable<BridgeTileReadyCallbackNative>? _tileReadyCallable;
+
+  static final Map<String, void Function(Uint8List data)> _pendingTileCallbacks = {};
+
+  static void _onNativeError(int errorCode, Pointer<Utf8> message, Pointer<Void> userData) {
+    final msg = message.toDartString();
+    print('Native Error ($errorCode): $msg');
+  }
+
+  static void _onTileReady(Pointer<Utf8> tileIdPtr, Pointer<Uint8> dataPtr, int size, Pointer<Void> userData) {
+    final tileId = tileIdPtr.toDartString();
+    final callback = _pendingTileCallbacks.remove(tileId);
+    if (callback != null) {
+      final list = dataPtr.asTypedList(size);
+      final data = Uint8List.fromList(list);
+      callback(data);
+    }
+  }
+
   static Future<CesiumEngine> initialize({
     String? tilesetUrl,
     int maxSimultaneousTileLoads = 20,
@@ -32,9 +52,13 @@ class CesiumEngine {
       config.ref.tilesetUrl = nullptr;
     }
 
-    // Callback intentionally nullptr. See bridge_bindings.dart for thread
-    // safety notes before wiring a real Dart callback here.
-    final handle = bindings.initialize(config, nullptr, nullptr);
+    _errorCallable?.close();
+    _errorCallable = NativeCallable<BridgeErrorCallbackNative>.listener(_onNativeError);
+
+    _tileReadyCallable?.close();
+    _tileReadyCallable = NativeCallable<BridgeTileReadyCallbackNative>.listener(_onTileReady);
+
+    final handle = bindings.initialize(config, _errorCallable!.nativeFunction, nullptr);
 
     if (tilesetUrl != null && tilesetUrl.isNotEmpty) {
       calloc.free(config.ref.tilesetUrl);
@@ -154,14 +178,23 @@ class CesiumEngine {
 
   void requestTileData(String tileId, void Function(Uint8List data) onReady) {
     final tileIdNative = tileId.toNativeUtf8(allocator: calloc);
-    // Callback intentionally nullptr. See bridge_bindings.dart for thread
-    // safety notes before wiring a real Dart callback here.
-    _bindings.requestTileData(_handle, tileIdNative, nullptr, nullptr);
+    _pendingTileCallbacks[tileId] = onReady;
+    _bindings.requestTileData(
+      _handle,
+      tileIdNative,
+      _tileReadyCallable?.nativeFunction ?? nullptr,
+      nullptr,
+    );
     calloc.free(tileIdNative);
   }
 
   void dispose() {
     _bindings.shutdown(_handle);
+    _errorCallable?.close();
+    _errorCallable = null;
+    _tileReadyCallable?.close();
+    _tileReadyCallable = null;
+    _pendingTileCallbacks.clear();
     if (_instance == this) {
       _instance = null;
     }
