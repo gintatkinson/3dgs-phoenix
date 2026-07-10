@@ -226,6 +226,5 @@ void UOffscreenRenderer::ExportFrameToIosurface()
 	[BlitEncoder copyFromTexture:SourceTexture toTexture:DestTexture];
 	[BlitEncoder endEncoding];
 	[CmdBuf commit];
-	[CmdBuf waitUntilCompleted];
 }
 #endif
