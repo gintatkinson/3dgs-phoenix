@@ -16,6 +16,7 @@ class DaemonClient {
   static const Duration _connectTimeout = Duration(seconds: 5);
 
   Socket? _socket;
+  StreamSubscription<Uint8List>? _socketSubscription;
   bool _connected = false;
   bool _disposed = false;
   int? _latestIosurfaceId;
@@ -62,7 +63,7 @@ class DaemonClient {
       }
 
       _buffer.clear();
-      _socket!.listen(
+      _socketSubscription = _socket!.listen(
         _onData,
         onError: _onSocketError,
         onDone: _onSocketDone,
@@ -88,6 +89,8 @@ class DaemonClient {
     _responseCompleter?.complete(null);
     _responseCompleter = null;
     _buffer.clear();
+    _socketSubscription?.cancel();
+    _socketSubscription = null;
     _socket?.destroy();
     _socket = null;
     _connected = false;
