@@ -50,7 +50,16 @@ bool FDaemonServer::Init()
 	int32 OptVal = 1;
 	setsockopt(ListenSocket, SOL_SOCKET, SO_REUSEADDR, &OptVal, sizeof(OptVal));
 
-	unlink(TCHAR_TO_UTF8(*SocketPath));
+	int testFd = socket(AF_UNIX, SOCK_STREAM, 0);
+	struct sockaddr_un testAddr;
+	memset(&testAddr, 0, sizeof(testAddr));
+	testAddr.sun_family = AF_UNIX;
+	FCStringAnsi::Strcpy(testAddr.sun_path, sizeof(testAddr.sun_path), TCHAR_TO_UTF8(*SocketPath));
+	if (connect(testFd, (struct sockaddr*)&testAddr, sizeof(testAddr)) < 0)
+	{
+		unlink(TCHAR_TO_UTF8(*SocketPath));
+	}
+	close(testFd);
 
 	struct sockaddr_un Addr;
 	memset(&Addr, 0, sizeof(Addr));
