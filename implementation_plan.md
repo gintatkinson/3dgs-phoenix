@@ -1,22 +1,19 @@
-# Implementation Plan - Epic 4: WebAssembly Component Model Extensibility Linter Fixes
+# Implementation Plan - macOS Profile Update
 
 ## 1. Objectives
-- Fix Mermaid class diagram linter violations in `/Users/perkunas/jail/3dgs-phoenix/docs/epics/epic-04-wasm-extensibility.md`.
-- Change attribute syntax of all classes from `-name : type` to standard UML format without colons: `visibility type name [multiplicity]`.
-- Change realization connector `..|>` to generalization connector `<|--` under relationships section.
+- Update `.pipeline/profiles/macos.md` to specify the exact target (`--target cesium_native_bridge`) when building the C++ bridge.
+- Remove remaining Unreal Engine references in `.pipeline/profiles/macos.md` (specifically, `.uasset` reference).
 
 ## 2. File Modifications
 
-### `docs/epics/epic-04-wasm-extensibility.md`
-- Replace attributes:
-  - `-engine : String [1]` with `-String engine [1]`
-  - `-linker : String [1]` with `-String linker [1]`
-  - `-loadedPlugins : PluginInstance [0..*]` with `-PluginInstance loadedPlugins [0..*]`
-  - `-engine : WasmtimeEngine [1]` with `-WasmtimeEngine engine [1]`
-- Replace connector:
-  - `BillingPlugin ..|> WitInterface` with `WitInterface <|-- BillingPlugin`
+### `.pipeline/profiles/macos.md`
+- Change bridge compilation command:
+  - From: `- **Bridge compilation:** `cd cesium_native_bridge && cmake --build build``
+  - To: `- **Bridge compilation:** `cd cesium_native_bridge && cmake --build build --target cesium_native_bridge``
+- Remove Unreal Engine references:
+  - From: `- **API keys:** Cesium ion token stored in `.uasset` only — never in plaintext code files`
+  - To: `- **API keys:** Cesium ion token resolved via the environment variable `CESIUM_ION_TOKEN` — never in plaintext code files`
 
 ## 3. Success / Verification Criteria
-- `docs/epics/epic-04-wasm-extensibility.md` renders correctly.
-- All modifications are cleanly staged, committed, and pushed to origin/main.
-- `git diff origin/main` shows no changes.
+- Verify the content of `.pipeline/profiles/macos.md`.
+- Commit changes, push to the remote tracking branch, and verify that `git diff origin/feat/251-cesium-native-clean` is empty.
