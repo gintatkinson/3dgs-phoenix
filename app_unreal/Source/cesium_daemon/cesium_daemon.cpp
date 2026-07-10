@@ -1,4 +1,12 @@
 #include "cesium_daemon.h"
-#include "Modules/ModuleManager.h"
+#include "DaemonGameMode.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, cesium_daemon, "cesium_daemon");
+void Fcesium_daemonModule::StartupModule()
+{
+}
+
+void Fcesium_daemonModule::ShutdownModule()
+{
+}
+
+IMPLEMENT_PRIMARY_GAME_MODULE(Fcesium_daemonModule, cesium_daemon, "cesium_daemon");
