@@ -267,4 +267,45 @@ void main() {
       expect(true, isTrue);
     });
   });
+
+  group('Frame update timer lifecycle', () {
+    test('frame timer stops when daemon disconnects', () async {
+      final viewport = Scene3DViewport(
+        camera: VirtualCamera(latitude: 0, longitude: 0, altitude: 100, heading: 0, pitch: 0, roll: 0),
+      );
+      final state = Scene3DViewportState();
+
+      expect(state.frameUpdateTimer, isNull);
+
+      state.startFrameUpdateTimer();
+      expect(state.frameUpdateTimer, isNotNull);
+      expect(state.frameUpdateTimer!.isActive, isTrue);
+
+      state.subscribeToConnectionStream(Stream.value(false));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(state.frameUpdateTimer?.isActive ?? true, isFalse);
+    });
+
+    test('frame timer restarts when daemon reconnects', () async {
+      final viewport = Scene3DViewport(
+        camera: VirtualCamera(latitude: 0, longitude: 0, altitude: 100, heading: 0, pitch: 0, roll: 0),
+      );
+      final state = Scene3DViewportState();
+
+      expect(state.frameUpdateTimer, isNull);
+
+      state.startFrameUpdateTimer();
+      expect(state.frameUpdateTimer!.isActive, isTrue);
+
+      state.subscribeToConnectionStream(Stream.value(false));
+      await Future<void>.delayed(Duration.zero);
+      expect(state.frameUpdateTimer?.isActive ?? true, isFalse);
+
+      state.subscribeToConnectionStream(Stream.value(true));
+      await Future<void>.delayed(Duration.zero);
+      expect(state.frameUpdateTimer, isNotNull);
+      expect(state.frameUpdateTimer!.isActive, isTrue);
+    });
+  });
 }

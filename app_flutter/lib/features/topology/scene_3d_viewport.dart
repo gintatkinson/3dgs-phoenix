@@ -83,17 +83,26 @@ class Scene3DViewportState extends State<Scene3DViewport> {
         dir = dir.parent;
       }
       if (workspaceRoot != null) {
-        final String devPath = '$workspaceRoot/app_unreal/Binaries/Mac/cesium_daemon';
-        if (File(devPath).existsSync()) {
-          targetPath = devPath;
-          workingDirectory = '$workspaceRoot/app_unreal/Binaries/Mac';
+        final String stagedPath = '$workspaceRoot/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS/cesium_daemon';
+        if (File(stagedPath).existsSync()) {
+          targetPath = stagedPath;
+          workingDirectory = '$workspaceRoot/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS';
         } else {
-          final String stagedPath = '$workspaceRoot/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS/cesium_daemon';
-          if (File(stagedPath).existsSync()) {
-            targetPath = stagedPath;
-            workingDirectory = '$workspaceRoot/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS';
+          final String devPath = '$workspaceRoot/app_unreal/Binaries/Mac/cesium_daemon';
+          if (File(devPath).existsSync()) {
+            targetPath = devPath;
+            workingDirectory = '$workspaceRoot/app_unreal/Binaries/Mac';
           }
         }
+      }
+    }
+
+    if (targetPath.isEmpty) {
+      const String stagedDaemon =
+          '/Users/perkunas/jail/3dgs-phoenix/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS/cesium_daemon';
+      if (File(stagedDaemon).existsSync()) {
+        targetPath = stagedDaemon;
+        workingDirectory = '/Users/perkunas/jail/3dgs-phoenix/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS';
       }
     }
 
@@ -146,7 +155,6 @@ class Scene3DViewportState extends State<Scene3DViewport> {
   }
 
   void _onDaemonExited() {
-    _frameUpdateTimer?.cancel();
     _reconnectCheckTimer?.cancel();
     _connectionSubscription?.cancel();
     _reconnectCheckTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -176,6 +184,25 @@ class Scene3DViewportState extends State<Scene3DViewport> {
 
   @visibleForTesting
   GlobeTileRenderer? get tileRenderer => _tileRenderer;
+
+  @visibleForTesting
+  Timer? get frameUpdateTimer => _frameUpdateTimer;
+
+  @visibleForTesting
+  void startFrameUpdateTimer() => _startFrameUpdateTimer();
+
+  @visibleForTesting
+  void subscribeToConnectionStream(Stream<bool> connectionStream) {
+    _connectionSubscription?.cancel();
+    _connectionSubscription = connectionStream.listen((connected) {
+      if (connected) {
+        _daemonClient = _unrealDaemonManager?.client;
+        _startFrameUpdateTimer();
+      } else {
+        _frameUpdateTimer?.cancel();
+      }
+    });
+  }
 
   Offset getProjectedPosition(double latitude, double longitude) {
     final Size? size = context.size;
