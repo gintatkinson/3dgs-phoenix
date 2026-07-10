@@ -76,6 +76,9 @@ flutter:
     - assets/properties_db.db.gz
     - assets/topology_data.json
     - assets/strings.json
+  shaders:
+    - shaders/globe.frag
+    - shaders/atmosphere.frag
 
   # To add assets to your application, add an assets section, like this:
   # assets:

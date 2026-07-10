@@ -1,29 +1,23 @@
-# Implementation Plan - macOS Profile Update and Bridge Implementation
+# Implementation Plan - Custom Shaders Implementation
 
 ## 1. Objectives
-- Update `.pipeline/profiles/macos.md` to specify the exact target (`--target cesium_native_bridge`) when building the C++ bridge.
-- Remove remaining Unreal Engine references in `.pipeline/profiles/macos.md` (specifically, `.uasset` reference).
-- Update `cesium_native_bridge/src/bridge.cpp` to implement all tileset, camera, and tile retrieval functions using the `cesium-native` library.
-- Add `CesiumGltf` and `CesiumGltfWriter` include directories and target link libraries to `cesium_native_bridge/CMakeLists.txt` to fix compiler missing headers/libraries.
+- Implement the custom globe fragment shader at `app_flutter/shaders/globe.frag`.
+- Implement the custom atmosphere fragment shader at `app_flutter/shaders/atmosphere.frag`.
+- Register the custom fragment shaders in `app_flutter/pubspec.yaml`.
 
 ## 2. File Modifications
 
-### `.pipeline/profiles/macos.md`
-- Change bridge compilation command:
-  - From: `- **Bridge compilation:** `cd cesium_native_bridge && cmake --build build``
-  - To: `- **Bridge compilation:** `cd cesium_native_bridge && cmake --build build --target cesium_native_bridge``
-- Remove Unreal Engine references:
-  - From: `- **API keys:** Cesium ion token stored in `.uasset` only — never in plaintext code files`
-  - To: `- **API keys:** Cesium ion token resolved via the environment variable `CESIUM_ION_TOKEN` — never in plaintext code files`
+### `app_flutter/shaders/globe.frag`
+- Create this file with a standard Flutter runtime effect GLSL (version 460) shader that samples a texture and applies alpha blending based on `uBlendAlpha`.
 
-### `cesium_native_bridge/src/bridge.cpp`
-- Complete implementation of tileset, camera, and tile retrieval functions using `cesium-native`.
+### `app_flutter/shaders/atmosphere.frag`
+- Create this file with a standard Flutter runtime effect GLSL (version 460) shader that computes a smooth radial glow/ring based on `uGlowPower` and `uAtmosphereColor`.
 
-### `cesium_native_bridge/CMakeLists.txt`
-- Add `${CESIUM_NATIVE_DIR}/CesiumGltf/include` and `${CESIUM_NATIVE_DIR}/CesiumGltfWriter/include` to target_include_directories.
-- Add `CesiumGltf` and `CesiumGltfWriter` to target_link_libraries.
+### `app_flutter/pubspec.yaml`
+- Register `shaders/globe.frag` and `shaders/atmosphere.frag` under the `flutter:` configuration block.
 
 ## 3. Success / Verification Criteria
-- Verify the content of `.pipeline/profiles/macos.md`.
-- Build the bridge target: `cmake --build . --target cesium_native_bridge`.
-- Commit changes, push to the remote tracking branch, and verify that `git diff origin/feat/251-cesium-native-clean` is empty.
+- Run `flutter pub get` in `app_flutter/` to process the asset/shader declarations.
+- Run `flutter analyze` in `app_flutter/` to verify that there are no static analysis errors.
+- Stage, commit, and push the changes to git.
+- Verify that `git diff origin/feat/251-cesium-native-clean` shows only the expected shader files and updated `pubspec.yaml`.
