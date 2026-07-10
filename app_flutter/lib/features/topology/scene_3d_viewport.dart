@@ -14,6 +14,7 @@ import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:app_flutter/domain/cesium_3d/camera_controller.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
 import 'package:app_flutter/domain/cesium_3d/unreal_daemon_manager.dart';
+import 'package:app_flutter/domain/cesium_3d/grpc_channel.dart';
 import 'package:app_flutter/domain/cesium_3d/native/mac_iosurface_texture_controller.dart';
 import 'package:app_flutter/features/topology/topology_map.dart';
 
@@ -21,12 +22,14 @@ class Scene3DViewport extends StatefulWidget {
   final VirtualCamera camera;
   final TopologyData? topologyData;
   final ValueChanged<VirtualCamera>? onCameraChanged;
+  final String? sceneId;
 
   const Scene3DViewport({
     super.key,
     required this.camera,
     this.topologyData,
     this.onCameraChanged,
+    this.sceneId,
   });
 
   /// Initializes the 3D scene rendering state.
@@ -46,18 +49,15 @@ class Scene3DViewport extends StatefulWidget {
 class Scene3DViewportState extends State<Scene3DViewport> {
   late CameraController _cameraController;
   UnrealDaemonManager? _unrealDaemonManager;
+  DaemonClient? _daemonClient;
   late final MacIosurfaceTextureController _textureController = MacIosurfaceTextureController();
   Timer? _frameUpdateTimer;
+  StreamSubscription<bool>? _connectionSubscription;
+  Timer? _reconnectCheckTimer;
 
   Future<void> _initTexture() async {
     await _textureController.initialize();
     if (mounted) {
-      _textureController.updateCamera(
-        _cameraController.current.latitude,
-        _cameraController.current.longitude,
-        _cameraController.current.heading,
-        _cameraController.current.pitch,
-      );
       setState(() {});
     }
   }
@@ -87,6 +87,12 @@ class Scene3DViewportState extends State<Scene3DViewport> {
         if (File(devPath).existsSync()) {
           targetPath = devPath;
           workingDirectory = '$workspaceRoot/app_unreal/Binaries/Mac';
+        } else {
+          final String stagedPath = '$workspaceRoot/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS/cesium_daemon';
+          if (File(stagedPath).existsSync()) {
+            targetPath = stagedPath;
+            workingDirectory = '$workspaceRoot/app_unreal/Saved/StagedBuilds/Mac/cesium_daemon.app/Contents/MacOS';
+          }
         }
       }
     }
@@ -98,15 +104,64 @@ class Scene3DViewportState extends State<Scene3DViewport> {
         },
       );
       try {
-        await _unrealDaemonManager!.spawnDaemon(targetPath, workingDirectory: workingDirectory);
+        final sid = widget.sceneId ?? 'cesium_3d';
+        await _unrealDaemonManager!.spawnDaemon(targetPath, workingDirectory: workingDirectory, sceneId: sid);
+        _daemonClient = _unrealDaemonManager!.client;
+        _unrealDaemonManager!.onProcessExit = _onDaemonExited;
+        _hookConnectionStateListener(_daemonClient);
         _unrealDaemonManager!.monitorDaemon();
-        // _frameUpdateTimer = Timer.periodic(const Duration(milliseconds: 33), (timer) {
-        //   _textureController.updateFrame(140735492982848);
-        // });
+        _startFrameUpdateTimer();
       } catch (e) {
         debugPrint('[UnrealDaemon] Failed to spawn daemon: $e');
       }
     }
+  }
+
+  void _startFrameUpdateTimer() {
+    _frameUpdateTimer?.cancel();
+    _frameUpdateTimer = Timer.periodic(const Duration(milliseconds: 33), (timer) async {
+      if (_daemonClient == null || !_daemonClient!.isConnected) return;
+      final idStr = await _daemonClient!.getIosurfaceId();
+      if (idStr != null) {
+        final id = int.tryParse(idStr);
+        if (id != null) {
+          _textureController.updateFrame(id);
+        }
+      }
+    });
+  }
+
+  void _hookConnectionStateListener(DaemonClient? client) {
+    _connectionSubscription?.cancel();
+    if (client == null) return;
+    _connectionSubscription = client.connectionStateChanges.listen((connected) {
+      if (!mounted) return;
+      if (connected) {
+        _daemonClient = _unrealDaemonManager?.client;
+        _startFrameUpdateTimer();
+      } else {
+        _frameUpdateTimer?.cancel();
+      }
+    });
+  }
+
+  void _onDaemonExited() {
+    _frameUpdateTimer?.cancel();
+    _reconnectCheckTimer?.cancel();
+    _connectionSubscription?.cancel();
+    _reconnectCheckTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final client = _unrealDaemonManager?.client;
+      if (client != null && client.isConnected) {
+        timer.cancel();
+        _daemonClient = client;
+        _hookConnectionStateListener(client);
+        _startFrameUpdateTimer();
+      }
+    });
   }
 
   double clampPlayheadRate(double rate) {
@@ -236,11 +291,13 @@ class Scene3DViewportState extends State<Scene3DViewport> {
   void _onCameraChangedInside() {
     if (mounted && !_isUpdatingWidget) {
       setState(() {});
-      _textureController.updateCamera(
-        _cameraController.current.latitude,
-        _cameraController.current.longitude,
-        _cameraController.current.heading,
-        _cameraController.current.pitch,
+      _daemonClient?.sendCameraUpdate(
+        lat: _cameraController.current.latitude,
+        lon: _cameraController.current.longitude,
+        alt: _cameraController.current.altitude,
+        heading: _cameraController.current.heading,
+        pitch: _cameraController.current.pitch,
+        roll: _cameraController.current.roll,
       );
       widget.onCameraChanged?.call(_cameraController.current);
     }
@@ -259,11 +316,14 @@ class Scene3DViewportState extends State<Scene3DViewport> {
   @override
   void dispose() {
     _frameUpdateTimer?.cancel();
+    _reconnectCheckTimer?.cancel();
+    _connectionSubscription?.cancel();
     _flyTimer?.cancel();
     _globeFocusNode.dispose();
     _cameraController.removeListener(_onCameraChangedInside);
     _cameraController.dispose();
     _tileRenderer?.dispose();
+    _daemonClient?.dispose();
     if (_unrealDaemonManager != null) {
       _unrealDaemonManager!.activeProcess?.kill();
     }

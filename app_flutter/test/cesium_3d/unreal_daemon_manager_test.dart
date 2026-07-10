@@ -170,6 +170,67 @@ void main() {
       expect(spawnedArgs!.any((arg) => arg == '-SceneId=test'), isTrue);
     });
 
+    test('onProcessExit callback fires when daemon process exits', () async {
+      bool exitCallbackFired = false;
+
+      final manager = UnrealDaemonManager(
+        fileExists: (path) => true,
+        spawnProcess: (path, args) async {
+          return FakeProcess();
+        },
+      );
+
+      manager.onProcessExit = () {
+        exitCallbackFired = true;
+      };
+
+      await manager.spawnDaemon('/valid/path');
+
+      final monitorFuture = manager.monitorDaemon();
+
+      final process = manager.activeProcess as FakeProcess;
+      process.simulateExit(0);
+
+      await monitorFuture;
+      expect(exitCallbackFired, isTrue);
+    });
+
+    test('onProcessExit callback fires on abnormal exit too', () async {
+      final List<bool> exitCallbacks = [];
+      final List<FakeProcess> processes = [];
+
+      final manager = UnrealDaemonManager(
+        fileExists: (path) => true,
+        spawnProcess: (path, args) async {
+          final proc = FakeProcess();
+          processes.add(proc);
+          return proc;
+        },
+      );
+
+      manager.onProcessExit = () {
+        exitCallbacks.add(true);
+      };
+
+      await manager.spawnDaemon('/valid/path');
+
+      final monitorFuture = manager.monitorDaemon();
+
+      // Simulate crash (exit code 139)
+      processes[0].simulateExit(139);
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      // Should have been called once for first process
+      expect(exitCallbacks.length, equals(1));
+
+      // Simulate second process exiting normally
+      processes[1].simulateExit(0);
+
+      await monitorFuture;
+      // Called twice: first abnormal exit, second normal exit
+      expect(exitCallbacks.length, equals(2));
+    });
+
     test('restartDaemon kills existing process and spawns new one', () async {
       final List<FakeProcess> processes = [];
 
