@@ -46,7 +46,8 @@ void main() {
       final result = await manager.spawnDaemon('/valid/path/to/unreal');
       expect(result, isTrue);
       expect(spawnedPath, equals('/valid/path/to/unreal'));
-      expect(spawnedArgs, equals(['-RenderOffscreen']));
+      expect(spawnedArgs![0], equals('-RenderOffscreen'));
+      expect(spawnedArgs![1], startsWith('-SavedDir='));
     });
 
     test('spawnDaemon throws DaemonBootFailure on invalid paths', () async {
@@ -103,7 +104,8 @@ void main() {
 
       // A second process should have been spawned
       expect(processes.length, equals(2));
-      expect(spawnArgsHistory[1], equals(['-RenderOffscreen']));
+      expect(spawnArgsHistory[1][0], equals('-RenderOffscreen'));
+      expect(spawnArgsHistory[1][1], startsWith('-SavedDir='));
 
       // Simulate second process exiting normally (exit code 0)
       processes[1].simulateExit(0);
@@ -151,6 +153,21 @@ void main() {
         () => monitorFuture,
         throwsA(isA<MaxRebootThresholdReached>()),
       );
+    });
+
+    test('spawnDaemon passes -SceneId= arg when sceneId is provided', () async {
+      List<String>? spawnedArgs;
+
+      final manager = UnrealDaemonManager(
+        fileExists: (path) => path == '/valid/path',
+        spawnProcess: (path, args) async {
+          spawnedArgs = args;
+          return FakeProcess();
+        },
+      );
+
+      await manager.spawnDaemon('/valid/path', sceneId: 'test');
+      expect(spawnedArgs!.any((arg) => arg == '-SceneId=test'), isTrue);
     });
 
     test('restartDaemon kills existing process and spawns new one', () async {

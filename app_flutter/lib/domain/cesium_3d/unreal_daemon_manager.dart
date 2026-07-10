@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
+
+import 'grpc_channel.dart';
 
 /// Exception thrown when the Unreal daemon fails to start or the executable path is invalid.
 class DaemonBootFailure implements Exception {
@@ -40,21 +43,37 @@ class UnrealDaemonManager {
   Process? _process;
   ProcessWatcher? _watcher;
   String? _unrealPath;
+  String? _sceneId;
+  DaemonClient? _client;
 
   final List<DateTime> _crashTimes = [];
   final int maxReboots;
   final Duration thresholdWindow;
 
+  VoidCallback? onProcessExit;
+
+  /// Gets the Unix Domain Socket path for the daemon.
+  String? get socketPath => _sceneId != null ? '/tmp/cesium_daemon_$_sceneId.sock' : null;
+
+  /// The scene ID used to construct the socket path.
+  String? get sceneId => _sceneId;
+
+  /// The connected [DaemonClient] for UDS communication with the daemon.
+  DaemonClient? get client => _client;
+
   /// Creates a new [UnrealDaemonManager].
   ///
-  /// Can optionally inject custom [spawnProcess] and [fileExists] functions for testing.
+  /// Can optionally inject custom [spawnProcess], [fileExists] functions for testing,
+  /// and a [sceneId] for determining the socket path.
   UnrealDaemonManager({
     Future<Process> Function(String, List<String>)? spawnProcess,
     bool Function(String)? fileExists,
     void Function(String)? log,
+    String? sceneId,
     this.maxReboots = 3,
     this.thresholdWindow = const Duration(seconds: 60),
-  })  : _spawnProcess = spawnProcess ?? _defaultSpawn,
+  })  : _sceneId = sceneId,
+        _spawnProcess = spawnProcess ?? _defaultSpawn,
         _fileExists = fileExists ?? _defaultFileExists,
         _log = log;
 
@@ -77,9 +96,15 @@ class UnrealDaemonManager {
   /// Starts the Unreal rendering daemon with the `-RenderOffscreen` flag.
   ///
   /// Throws [DaemonBootFailure] if the file doesn't exist or starting fails.
-  Future<bool> spawnDaemon(String unrealPath, {String? workingDirectory}) async {
+  /// If [sceneId] is provided, a [DaemonClient] will be created and connected
+  /// automatically after successful spawn.
+  Future<bool> spawnDaemon(String unrealPath, {String? workingDirectory, String? sceneId}) async {
     if (!_fileExists(unrealPath)) {
       throw DaemonBootFailure('Unreal executable file does not exist at path: $unrealPath');
+    }
+
+    if (sceneId != null) {
+      _sceneId = sceneId;
     }
 
     _unrealPath = unrealPath;
@@ -92,18 +117,30 @@ class UnrealDaemonManager {
         Directory(savedPath).createSync(recursive: true);
       } catch (_) {}
       
+      final args = <String>['-RenderOffscreen', '-SavedDir=$savedPath'];
+      if (_sceneId != null) {
+        args.add('-SceneId=$_sceneId');
+      }
+
       final Process process;
       if (workingDirectory != null && _spawnProcess == _defaultSpawn) {
         process = await Process.start(
           unrealPath,
-          ['-RenderOffscreen', '-SavedDir=$savedPath'],
+          args,
           workingDirectory: workingDirectory,
         );
       } else {
-        process = await _spawnProcess(unrealPath, ['-RenderOffscreen', '-SavedDir=$savedPath']);
+        process = await _spawnProcess(unrealPath, args);
       }
       _process = process;
       _watcher = ProcessWatcher(process);
+
+      if (_sceneId != null) {
+        _client?.dispose();
+        _client = DaemonClient(socketPath: socketPath!);
+        _client!.connect();
+      }
+
       return true;
     } catch (e) {
       throw DaemonBootFailure('Failed to start Unreal daemon process: $e');
@@ -124,6 +161,7 @@ class UnrealDaemonManager {
 
     try {
       final exitCode = await watcher.watchExitCode();
+      onProcessExit?.call();
       if (exitCode == 0) {
         _log?.call('Unreal daemon process exited normally with code 0.');
         return true;
@@ -165,6 +203,7 @@ class UnrealDaemonManager {
     final active = _process;
     if (active != null) {
       _log?.call('Killing active daemon process.');
+      _client?.disconnect();
       active.kill();
       _process = null;
       _watcher = null;
