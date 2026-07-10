@@ -309,6 +309,7 @@ FString FDaemonServer::HandleUpdateCamera(const TSharedPtr<FJsonObject>& Json)
 					if (Capture)
 					{
 						Capture->SetWorldLocation(UePos);
+						Capture->SetWorldRotation(FRotator(Pitch, Heading, Roll));
 					}
 				}
 

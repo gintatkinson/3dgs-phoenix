@@ -2,6 +2,7 @@
 #include "OffscreenRenderer.h"
 #include "DaemonServer.h"
 #include "CesiumGeoreference.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Misc/CommandLine.h"
@@ -38,6 +39,7 @@ void ADaemonGameMode::BeginPlay()
 			if (OffscreenRenderer && OffscreenRenderer->GetSceneCapture())
 			{
 				OffscreenRenderer->GetSceneCapture()->SetWorldLocation(UePos);
+				OffscreenRenderer->GetSceneCapture()->SetWorldRotation(FRotator(-90.0, 0.0, 0.0));
 			}
 		}
 	}

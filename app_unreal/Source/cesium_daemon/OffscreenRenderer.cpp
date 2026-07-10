@@ -53,9 +53,13 @@ void UOffscreenRenderer::Initialize(UWorld* World)
 	SceneCapture->RegisterComponentWithWorld(World);
 	SceneCapture->AttachToComponent(PC->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
 	SceneCapture->TextureTarget = RenderTarget;
-	SceneCapture->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+	SceneCapture->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
 	SceneCapture->bCaptureEveryFrame = true;
 	SceneCapture->bCaptureOnMovement = false;
+
+	SceneCapture->ShowFlags.SetRendering(true);
+	SceneCapture->ShowFlags.SetStaticMeshes(true);
+	SceneCapture->ShowFlags.SetLandscape(true);
 
 	IosurfaceId = 0;
 

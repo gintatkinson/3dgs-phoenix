@@ -10,9 +10,22 @@ public class cesium_daemon : ModuleRules
             "Core", 
             "CoreUObject", 
             "Engine", 
-            "InputCore" 
+            "InputCore",
+            "CesiumRuntime",
+            "RHI",
+            "RenderCore",
+            "Renderer",
+            "Sockets",
+            "Networking",
+            "Json",
+            "JsonUtilities"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
+
+        if (Target.Platform == UnrealTargetPlatform.Mac)
+        {
+            PublicFrameworks.AddRange(new string[] { "CoreVideo", "IOSurface", "Metal" });
+        }
     }
 }

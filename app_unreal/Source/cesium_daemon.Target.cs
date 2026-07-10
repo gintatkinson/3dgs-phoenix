@@ -7,7 +7,7 @@ public class cesium_daemonTarget : TargetRules
     {
         Type = TargetType.Game;
         bOverrideBuildEnvironment = true;
-        DefaultBuildSettings = BuildSettingsVersion.V5;
+        DefaultBuildSettings = BuildSettingsVersion.V7;
         IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
         ExtraModuleNames.Add("cesium_daemon");
     }
