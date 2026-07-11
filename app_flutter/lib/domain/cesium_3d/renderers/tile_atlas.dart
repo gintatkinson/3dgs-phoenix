@@ -89,6 +89,9 @@ class TileAtlas {
   /// The number of currently occupied slots.
   int get size => _tileToSlot.length;
 
+  /// The total allocated VRAM footprint in bytes for the active tiles.
+  int get allocatedBytes => size * slotWidth * slotHeight * 4;
+
   /// Gets the slot offset and scale for a given tile ID.
   ///
   /// If the tile is already cached:
@@ -157,7 +160,15 @@ class TileAtlas {
   ///
   /// The tile must already have been allocated via [getOrCreateTile].
   /// If the slot already contained a different image, it is disposed of.
+  ///
+  /// If [allocatedBytes] exceeds 512MB (512 * 1024 * 1024), [clear] is invoked
+  /// to immediately release all VRAM texture assets.
   void setImage(String tileId, dynamic image) {
+    if (allocatedBytes > 512 * 1024 * 1024) {
+      clear();
+      _disposeImage(image);
+    }
+
     final slotIndex = _tileToSlot[tileId];
     if (slotIndex == null) {
       throw StateError('Cannot set image for non-allocated tile ID: $tileId');

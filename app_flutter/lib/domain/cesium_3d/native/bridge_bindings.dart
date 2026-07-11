@@ -1,5 +1,5 @@
 import 'dart:ffi';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, Directory;
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 
@@ -204,13 +204,40 @@ class CesiumNativeBindings {
       throw UnsupportedError('Cesium native bridge is not supported on Web');
     }
     if (Platform.isMacOS) {
-      final lib = DynamicLibrary.open('libcesium_native_bridge.dylib');
+      DynamicLibrary lib;
+      try {
+        lib = DynamicLibrary.open('libcesium_native_bridge.dylib');
+      } catch (_) {
+        final baseDir = Directory.current.path;
+        final buildDir = baseDir.endsWith('app_flutter')
+            ? Directory(baseDir).parent.path + '/build'
+            : baseDir + '/build';
+        lib = DynamicLibrary.open(buildDir + '/libcesium_native_bridge.dylib');
+      }
       return CesiumNativeBindings(lib);
     } else if (Platform.isLinux) {
-      final lib = DynamicLibrary.open('libcesium_native_bridge.so');
+      DynamicLibrary lib;
+      try {
+        lib = DynamicLibrary.open('libcesium_native_bridge.so');
+      } catch (_) {
+        final baseDir = Directory.current.path;
+        final buildDir = baseDir.endsWith('app_flutter')
+            ? Directory(baseDir).parent.path + '/build'
+            : baseDir + '/build';
+        lib = DynamicLibrary.open(buildDir + '/libcesium_native_bridge.so');
+      }
       return CesiumNativeBindings(lib);
     } else if (Platform.isWindows) {
-      final lib = DynamicLibrary.open('cesium_native_bridge.dll');
+      DynamicLibrary lib;
+      try {
+        lib = DynamicLibrary.open('cesium_native_bridge.dll');
+      } catch (_) {
+        final baseDir = Directory.current.path;
+        final buildDir = baseDir.endsWith('app_flutter')
+            ? Directory(baseDir).parent.path + '/build'
+            : baseDir + '/build';
+        lib = DynamicLibrary.open(buildDir + '/cesium_native_bridge.dll');
+      }
       return CesiumNativeBindings(lib);
     }
     throw UnsupportedError('Cesium native bridge is not available on this platform');
