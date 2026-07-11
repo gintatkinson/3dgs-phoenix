@@ -33,7 +33,7 @@ To prevent the user from being interrupted by endless permission prompts, the ex
    - `gh`
    - `flutter`
 2. **File permissions**: Request write permission for the workspace root to ensure no write permission failures occur during edits:
-   - `/Users/perkunas/digital-pipeline-repo` (or local equivalent)
+   - `<absolute_workspace_path>` (or local equivalent)
 
 Once these permissions are requested and approved by the user, proceed to Step 1.
 
