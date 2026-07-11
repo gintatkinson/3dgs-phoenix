@@ -394,5 +394,14 @@ void main() {
         )),
       );
     });
+
+    test('should throw FormatException when fed random corrupted/garbage byte buffers', () {
+      final parser = GltfParser();
+      final garbageBytes = Uint8List.fromList(List.generate(100, (i) => i ^ 0xAA));
+      expect(
+        () => parser.parseGlb(garbageBytes),
+        throwsFormatException,
+      );
+    });
   });
 }

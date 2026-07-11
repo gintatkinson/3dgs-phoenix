@@ -92,10 +92,15 @@ class TileProcessor {
       mesh = GltfParser().parseGlb(glbBytes);
     }
 
+    final Float32List scaledPositions = Float32List(mesh.positions.length);
+    for (int i = 0; i < mesh.positions.length; i++) {
+      scaledPositions[i] = mesh.positions[i] / 6378137.0;
+    }
+
     geometryCache.put(
       tileId,
       TileGeometry(
-        positions: mesh.positions,
+        positions: scaledPositions,
         texCoords: mesh.texCoords,
         indices: mesh.indices,
       ),

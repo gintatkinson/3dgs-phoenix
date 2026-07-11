@@ -133,5 +133,54 @@ void main() {
       expect(canvas.lastVertices, isNotNull);
       expect(canvas.lastVerticesPaint?.shader, same(globeShader));
     });
+
+    test('projectNode and projectNodeAnchor calculate correct ECEF projected offsets', () {
+      final globeMesh = GlobeMesh.generateIcosahedron(subdivisionLevel: 0);
+      final tileAtlas = TileAtlas(columns: 2, rows: 2);
+      final renderer = GlobeRenderer(
+        globeShader: globeShader,
+        atmosphereShader: atmosphereShader,
+        globeMesh: globeMesh,
+        tileAtlas: tileAtlas,
+      );
+
+      final camera = VirtualCamera(
+        latitude: 0.0,
+        longitude: 0.0,
+        altitude: 10000000.0,
+        heading: 0.0,
+        pitch: -90.0,
+        roll: 0.0,
+      );
+
+      final painter = GlobePainter(
+        renderer: renderer,
+        camera: camera,
+        getElevation: (lat, lng) => 1000.0,
+      );
+
+      const size = Size(800.0, 600.0);
+
+      // Verify node projection (lat: 0, lng: 0, nodeHeight: 50)
+      // P_node = P_unit * (R_earth + H_terrain * 80) + H_node = 1.0 * (R_earth + 1000 * 80 + 50)
+      final expectedHeight = 6378137.0 + 1000.0 * 80.0 + 50.0;
+      final expectedScale = expectedHeight / 6378137.0;
+      final expectedOffset = painter.projectVertex(expectedScale, 0.0, 0.0, size);
+
+      final actualOffset = painter.projectNode(0.0, 0.0, 50.0, size);
+      expect(actualOffset.dx, closeTo(expectedOffset.dx, 1e-6));
+      expect(actualOffset.dy, closeTo(expectedOffset.dy, 1e-6));
+
+      // Verify node anchor projection
+      // P_anchor = P_unit * (R_earth + H_terrain * 80)
+      final expectedAnchorHeight = 6378137.0 + 1000.0 * 80.0;
+      final expectedAnchorScale = expectedAnchorHeight / 6378137.0;
+      final expectedAnchorOffset = painter.projectVertex(expectedAnchorScale, 0.0, 0.0, size);
+
+      final actualAnchorOffset = painter.projectNodeAnchor(0.0, 0.0, size);
+      expect(actualAnchorOffset.dx, closeTo(expectedAnchorOffset.dx, 1e-6));
+      expect(actualAnchorOffset.dy, closeTo(expectedAnchorOffset.dy, 1e-6));
+    });
   });
 }
+

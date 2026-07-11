@@ -57,4 +57,18 @@ class Culler {
 
     return true;
   }
+
+  /// Checks if a straight line segment connecting [nodeA] and [nodeB] (in ECEF coordinates)
+  /// passes through the Earth's sphere (i.e. is occluded by the Earth's curvature).
+  static bool isLinkOccluded(Vector3 nodeA, Vector3 nodeB) {
+    final Vector3 ab = nodeB - nodeA;
+    final double len2 = ab.length2;
+    if (len2 == 0.0) {
+      return nodeA.length < earthRadius;
+    }
+    final double t = (nodeA.dot(nodeA - nodeB) / len2).clamp(0.0, 1.0);
+    final Vector3 closePoint = nodeA + ab * t;
+    return closePoint.length < earthRadius;
+  }
 }
+

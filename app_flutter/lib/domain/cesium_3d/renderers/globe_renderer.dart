@@ -150,6 +150,63 @@ class GlobePainter extends CustomPainter {
     return projectVertex(dvx, dvy, dvz, size);
   }
 
+  /// Calculates the ECEF position of a node seated on the displaced surface.
+  ///
+  /// P_node = P_unit * (R_earth + H_terrain * 80.0) + N(P) * H_node
+  ui.Offset projectNode(double latDeg, double lngDeg, double nodeHeight, Size size, {bool elevationActive = true}) {
+    final double lat = latDeg * math.pi / 180.0;
+    final double lng = lngDeg * math.pi / 180.0;
+
+    final double vx = math.cos(lat) * math.cos(lng);
+    final double vy = math.cos(lat) * math.sin(lng);
+    final double vz = math.sin(lat);
+
+    final activeGetElevation = getElevation ?? renderer.getElevation;
+    double terrainElev = 0.0;
+    if (activeGetElevation != null && elevationActive) {
+      final double? val = activeGetElevation(latDeg, lngDeg);
+      if (val != null && val.isFinite) {
+        terrainElev = (val >= -12000.0 && val <= 9000.0) ? val : 0.0;
+      }
+    }
+
+    final double scale = 1.0 + (terrainElev * 80.0 + nodeHeight) / 6378137.0;
+    final double dvx = vx * scale;
+    final double dvy = vy * scale;
+    final double dvz = vz * scale;
+
+    return projectVertex(dvx, dvy, dvz, size);
+  }
+
+  /// Calculates the screen position of a node's terrain surface anchor.
+  ///
+  /// P_anchor = P_unit * (R_earth + H_terrain * 80.0)
+  ui.Offset projectNodeAnchor(double latDeg, double lngDeg, Size size, {bool elevationActive = true}) {
+    final double lat = latDeg * math.pi / 180.0;
+    final double lng = lngDeg * math.pi / 180.0;
+
+    final double vx = math.cos(lat) * math.cos(lng);
+    final double vy = math.cos(lat) * math.sin(lng);
+    final double vz = math.sin(lat);
+
+    final activeGetElevation = getElevation ?? renderer.getElevation;
+    double terrainElev = 0.0;
+    if (activeGetElevation != null && elevationActive) {
+      final double? val = activeGetElevation(latDeg, lngDeg);
+      if (val != null && val.isFinite) {
+        terrainElev = (val >= -12000.0 && val <= 9000.0) ? val : 0.0;
+      }
+    }
+
+    final double scale = 1.0 + (terrainElev * 80.0) / 6378137.0;
+    final double dvx = vx * scale;
+    final double dvy = vy * scale;
+    final double dvz = vz * scale;
+
+    return projectVertex(dvx, dvy, dvz, size);
+  }
+
+
   @override
   void paint(Canvas canvas, Size size) {
     // 1. Draw atmosphere glow
@@ -280,7 +337,7 @@ class GlobePainter extends CustomPainter {
           final double vy = tileGeometry.positions[j + 1];
           final double vz = tileGeometry.positions[j + 2];
 
-          tileProjectedPositions.add(projectVertex(vx, vy, vz, size));
+          tileProjectedPositions.add(projectVertexWithDisplacement(vx, vy, vz, size));
 
           // Horizon culling check for tile vertices
           final double len = math.sqrt(vx * vx + vy * vy + vz * vz);

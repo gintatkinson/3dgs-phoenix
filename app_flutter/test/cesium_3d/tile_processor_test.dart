@@ -10,28 +10,6 @@ import 'package:app_flutter/domain/cesium_3d/tile_processor.dart';
 final Uint8List tinyPngBytes = base64Decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
 
-class MockTileAtlas extends TileAtlas {
-  final List<String> getOrCreateTileCalls = [];
-  final Map<String, dynamic> uploadedImages = {};
-
-  MockTileAtlas() : super(columns: 2, rows: 2);
-
-  @override
-  AtlasResult getOrCreateTile(String tileId) {
-    getOrCreateTileCalls.add(tileId);
-    return const AtlasResult(
-      offset: ui.Offset(0.0, 0.0),
-      scale: ui.Size(0.5, 0.5),
-      slotIndex: 0,
-    );
-  }
-
-  @override
-  void setImage(String tileId, dynamic image) {
-    uploadedImages[tileId] = image;
-  }
-}
-
 void main() {
   // Helper to generate a valid mock GLB buffer
   Uint8List createMockGlb({
@@ -207,12 +185,12 @@ void main() {
   }
 
   group('TileProcessor Tests', () {
-    late MockTileAtlas tileAtlas;
+    late TileAtlas tileAtlas;
     late TileGeometryCache geometryCache;
     late TileProcessor processor;
 
     setUp(() {
-      tileAtlas = MockTileAtlas();
+      tileAtlas = TileAtlas(columns: 2, rows: 2);
       geometryCache = TileGeometryCache();
       processor = TileProcessor(
         tileAtlas: tileAtlas,
@@ -220,14 +198,16 @@ void main() {
       );
     });
 
-    test('should parse small GLB (<100KB) directly, cache geometry, and upload texture', () async {
+    testWidgets('should parse small GLB (<100KB) directly, cache geometry, and upload texture', (WidgetTester tester) async {
       final jsonMap = createValidJsonMap(includeImage: true);
       final binData = createValidBinData(includeImage: true);
       final glb = createMockGlb(jsonMap: jsonMap, binData: binData);
 
       expect(glb.length, lessThanOrEqualTo(100 * 1024));
 
-      await processor.processTileData('tile_small', glb);
+      await tester.runAsync(() async {
+        await processor.processTileData('tile_small', glb);
+      });
 
       // 1. Verify geometry is inserted into the cache
       expect(geometryCache.contains('tile_small'), isTrue);
@@ -237,12 +217,11 @@ void main() {
       expect(geometry.indices.length, equals(3));
 
       // 2. Verify image is decoded and uploaded to the atlas slot
-      expect(tileAtlas.getOrCreateTileCalls, contains('tile_small'));
-      expect(tileAtlas.uploadedImages.containsKey('tile_small'), isTrue);
-      expect(tileAtlas.uploadedImages['tile_small'], isA<ui.Image>());
+      expect(tileAtlas.contains('tile_small'), isTrue);
+      expect(tileAtlas.getImageForTile('tile_small'), isA<ui.Image>());
     });
 
-    test('should parse large GLB (>100KB) in isolate, cache geometry, and upload texture', () async {
+    testWidgets('should parse large GLB (>100KB) in isolate, cache geometry, and upload texture', (WidgetTester tester) async {
       // Create > 100KB GLB by adding extra padding bytes to bin data
       final jsonMap = createValidJsonMap(includeImage: true);
       final binData = createValidBinData(includeImage: true, extraPaddingBytes: 110 * 1024);
@@ -250,7 +229,9 @@ void main() {
 
       expect(glb.length, greaterThan(100 * 1024));
 
-      await processor.processTileData('tile_large', glb);
+      await tester.runAsync(() async {
+        await processor.processTileData('tile_large', glb);
+      });
 
       // 1. Verify geometry is inserted into cache
       expect(geometryCache.contains('tile_large'), isTrue);
@@ -260,24 +241,25 @@ void main() {
       expect(geometry.indices.length, equals(3));
 
       // 2. Verify image is decoded and uploaded to the atlas slot
-      expect(tileAtlas.getOrCreateTileCalls, contains('tile_large'));
-      expect(tileAtlas.uploadedImages.containsKey('tile_large'), isTrue);
-      expect(tileAtlas.uploadedImages['tile_large'], isA<ui.Image>());
+      expect(tileAtlas.contains('tile_large'), isTrue);
+      expect(tileAtlas.getImageForTile('tile_large'), isA<ui.Image>());
     });
 
-    test('should parse GLB without texture, cache geometry, but not upload image', () async {
+    testWidgets('should parse GLB without texture, cache geometry, but not upload image', (WidgetTester tester) async {
       final jsonMap = createValidJsonMap(includeImage: false);
       final binData = createValidBinData(includeImage: false);
       final glb = createMockGlb(jsonMap: jsonMap, binData: binData);
 
-      await processor.processTileData('tile_no_texture', glb);
+      await tester.runAsync(() async {
+        await processor.processTileData('tile_no_texture', glb);
+      });
 
       // Verify geometry is cached
       expect(geometryCache.contains('tile_no_texture'), isTrue);
 
       // Verify no image upload calls were made
-      expect(tileAtlas.getOrCreateTileCalls, isNot(contains('tile_no_texture')));
-      expect(tileAtlas.uploadedImages.containsKey('tile_no_texture'), isFalse);
+      expect(tileAtlas.contains('tile_no_texture'), isFalse);
+      expect(tileAtlas.getImageForTile('tile_no_texture'), isNull);
     });
   });
 }

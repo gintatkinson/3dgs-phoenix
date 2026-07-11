@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-
+import 'package:app_flutter/domain/cesium_3d/native/error_handler.dart';
 import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -65,6 +65,19 @@ void main() {
       expect(fetcher.cacheLength, 0);
       fetcher.clearCache();
       expect(fetcher.cacheLength, 0);
+    });
+
+    test('simulated connection timeout triggers TileTimeoutException', () async {
+      // Create a TileFetcher with a tiny 10ms connection timeout
+      final timeoutFetcher = TileFetcher(connectionTimeout: const Duration(milliseconds: 10));
+
+      // Override the base URL to a non-routable IP address which will cause TCP connect to hang/timeout
+      timeoutFetcher.baseUrlOverride = 'http://10.255.255.1';
+
+      expect(
+        () => timeoutFetcher.fetchTile(ImageryProvider.openStreetMap, 1, 2, 3),
+        throwsA(isA<TileTimeoutException>()),
+      );
     });
   });
 

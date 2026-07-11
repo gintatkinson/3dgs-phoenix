@@ -50,3 +50,18 @@ int checkStatus(int status) {
   if (status == -100) throw CesiumFatalException('Fatal internal error');
   return status;
 }
+
+class TileTimeoutException implements Exception {
+  final String message;
+  TileTimeoutException(this.message);
+  @override
+  String toString() => 'TileTimeoutException: $message';
+}
+
+class CesiumError {
+  final int code;
+  final String message;
+  CesiumError(this.code, this.message);
+  @override
+  String toString() => 'CesiumError(code: $code, message: $message)';
+}

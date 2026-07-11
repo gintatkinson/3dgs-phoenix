@@ -14,6 +14,8 @@ The 3D Visualization Epic aggregates high-performance native rendering pipelines
 ## 2. Requirements & Checklist
 - [ ] #239 - Feature 01: Native Desktop 3D Network Visualization (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-01-native-3d-network-visualization.md) (Aggregates high-performance native rendering pipelines)
 - [ ] #245 - Feature 02: 3D Terrain Elevation and Node Altitude Modeling (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-02-3d-terrain-elevation-and-node-altitude-modeling.md) (Renders dynamic terrain and ground altitudes)
+- [ ] #256 - Feature 20: Subdivided Geodetic Mesh Generator (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-20-geodetic-icosphere-generator.md) (Tessellates icosahedron into geodetic unit sphere mesh)
+- [ ] #258 - Feature 22: SSE LOD & Horizon Culling Engine (https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-22-sse-lod-culling-engine.md) (Calculates Screen Space Error thresholds, frustum culling, and horizon culling)
 
 ### Associated Use Cases & User Stories
 

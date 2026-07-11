@@ -69,5 +69,28 @@ void main() {
       final visible = Culler.isVisible(targetCenter, radius, cameraPos, cameraDir, fovRad);
       expect(visible, isTrue);
     });
+
+    group('isLinkOccluded tests', () {
+      test('Segment entirely above Earth on one side is not occluded', () {
+        final nodeA = Vector3(0.0, 0.0, R + 1000.0);
+        final nodeB = Vector3(10000.0, 0.0, R + 1000.0);
+        expect(Culler.isLinkOccluded(nodeA, nodeB), isFalse);
+      });
+
+      test('Segment passing through the Earth is occluded', () {
+        final nodeA = Vector3(0.0, 0.0, R + 1000.0);
+        final nodeB = Vector3(0.0, 0.0, -R - 1000.0); // passes through core
+        expect(Culler.isLinkOccluded(nodeA, nodeB), isTrue);
+      });
+
+      test('Segment tangent to Earth surface but passing below it is occluded', () {
+        // Points on opposite sides of a chord that passes closer to center than R
+        final nodeA = Vector3(-R, 0.0, 100.0);
+        final nodeB = Vector3(R, 0.0, 100.0);
+        // The midpoint is (0, 0, 100) which has magnitude 100 < R, so it passes through Earth
+        expect(Culler.isLinkOccluded(nodeA, nodeB), isTrue);
+      });
+    });
   });
 }
+

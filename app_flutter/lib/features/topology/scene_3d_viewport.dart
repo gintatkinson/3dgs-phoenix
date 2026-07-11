@@ -13,6 +13,8 @@ import 'package:app_flutter/domain/cesium_3d/tile_fetcher.dart';
 import 'package:app_flutter/domain/cesium_3d/camera_controller.dart';
 import 'package:app_flutter/domain/cesium_3d/virtual_camera.dart';
 import 'package:app_flutter/features/topology/topology_map.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
+import 'package:app_flutter/domain/cesium_3d/culler.dart';
 
 class Scene3DViewport extends StatefulWidget {
   final VirtualCamera camera;
@@ -1114,6 +1116,22 @@ class Scene3DViewportPainter extends CustomPainter {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.0;
 
+  Vector3 getEcef(double lat, double lng, double height) {
+    final CesiumEngine? engine = CesiumEngine.instance;
+    final double R = 6378137.0;
+    if (engine != null && engine.isReady) {
+      final ecef = engine.cartographicToEcef(lat * 180.0 / math.pi, lng * 180.0 / math.pi, height - R);
+      if (ecef != null) {
+        return Vector3(ecef.$1, ecef.$2, ecef.$3);
+      }
+    }
+    return Vector3(
+      height * math.cos(lat) * math.cos(lng),
+      height * math.cos(lat) * math.sin(lng),
+      height * math.sin(lat),
+    );
+  }
+
   ProjectedPoint project(
     double lat,
     double lng,
@@ -1700,8 +1718,10 @@ class Scene3DViewportPainter extends CustomPainter {
     }
 
     final Map<String, ProjectedPoint> allProjectedNodes = {};
+    final Map<String, Vector3> allNodeEcef = {};
     final List<Offset> groundGlowPoints = [];
     final List<Offset> groundPoints = [];
+    final List<Rect> occupiedLabelRects = [];
 
     for (final node in nodes) {
       final String id = node.id;
@@ -1763,7 +1783,8 @@ class Scene3DViewportPainter extends CustomPainter {
       double finalHeight = orbitHeight;
       if (type == 'ground' || type == 'underwater') {
         if (elevationActive) {
-          finalHeight = 6378137.0 + alt * 80.0;
+          final double terrainElev = getElevation(latDeg, currentLng * 180.0 / math.pi);
+          finalHeight = 6378137.0 + terrainElev * 80.0 + alt;
         } else {
           finalHeight = 6378137.0 + alt;
         }
@@ -1772,18 +1793,21 @@ class Scene3DViewportPainter extends CustomPainter {
       
       if (proj.z >= 0) {
         allProjectedNodes[id] = proj;
+        allNodeEcef[id] = getEcef(lat, currentLng, finalHeight);
 
-        // Draw vertical drop line from satellite to surface
-        if (type == 'space' && showDropLines) {
+        // Draw vertical grounding drop line for each node
+        if (showDropLines) {
           final double terrainElev = getElevation(latDeg, currentLng * 180.0 / math.pi);
-          final double surfaceHeight = 6378137.0 + terrainElev * 80.0;
+          final double surfaceHeight = 6378137.0 + (elevationActive ? terrainElev * 80.0 : 0.0);
           final surfaceProj = project(lat, currentLng, surfaceHeight, center, rotationAngle, tilt, size);
 
-          const int dashes = 10;
-          for (int d = 0; d < dashes; d++) {
-            final Offset pStart = Offset.lerp(proj.offset, surfaceProj.offset, d / dashes)!;
-            final Offset pEnd = Offset.lerp(proj.offset, surfaceProj.offset, (d + 0.5) / dashes)!;
-            canvas.drawLine(pStart, pEnd, _dropPaint);
+          if (proj.offset != surfaceProj.offset) {
+            const int dashes = 10;
+            for (int d = 0; d < dashes; d++) {
+              final Offset pStart = Offset.lerp(proj.offset, surfaceProj.offset, d / dashes)!;
+              final Offset pEnd = Offset.lerp(proj.offset, surfaceProj.offset, (d + 0.5) / dashes)!;
+              canvas.drawLine(pStart, pEnd, _dropPaint);
+            }
           }
         }
 
@@ -1815,19 +1839,39 @@ class Scene3DViewportPainter extends CustomPainter {
               ),
             );
             final Offset textPos = proj.offset + const Offset(8, -4);
-            final RRect capsuleRRect = RRect.fromRectAndRadius(
-              Rect.fromLTWH(
-                textPos.dx - 6,
-                textPos.dy - 3,
+            double shiftY = 0.0;
+            Rect labelRect;
+            bool hasCollision;
+            do {
+              final Offset shiftedTextPos = textPos + Offset(0, shiftY);
+              labelRect = Rect.fromLTWH(
+                shiftedTextPos.dx - 6,
+                shiftedTextPos.dy - 3,
                 textPainter.width + 12,
                 textPainter.height + 6,
-              ),
+              );
+              hasCollision = false;
+              for (final occupied in occupiedLabelRects) {
+                if (occupied.overlaps(labelRect)) {
+                  hasCollision = true;
+                  break;
+                }
+              }
+              if (hasCollision) {
+                shiftY -= (textPainter.height + 8.0);
+              }
+            } while (hasCollision && shiftY.abs() < 200.0);
+
+            occupiedLabelRects.add(labelRect);
+
+            final RRect capsuleRRect = RRect.fromRectAndRadius(
+              labelRect,
               const Radius.circular(8),
             );
             _labelBorderPaint.color = textColor.withOpacity(0.4);
             canvas.drawRRect(capsuleRRect, _labelBgPaint);
             canvas.drawRRect(capsuleRRect, _labelBorderPaint);
-            textPainter.paint(canvas, textPos);
+            textPainter.paint(canvas, textPos + Offset(0, shiftY));
           }
         }
       }
@@ -1857,15 +1901,33 @@ class Scene3DViewportPainter extends CustomPainter {
         final ProjectedPoint? p2 = allProjectedNodes[n2];
         
         if (p1 != null && p2 != null) {
-          linkGlowPoints.add(p1.offset);
-          linkGlowPoints.add(p2.offset);
+          final Vector3? ecef1 = allNodeEcef[n1];
+          final Vector3? ecef2 = allNodeEcef[n2];
           
-          linkPoints.add(p1.offset);
-          linkPoints.add(p2.offset);
+          bool isOccluded = false;
+          if (ecef1 != null && ecef2 != null) {
+            isOccluded = Culler.isLinkOccluded(ecef1, ecef2);
+          }
+          
+          if (isOccluded) {
+            // Draw as dashed in painter
+            const int dashes = 10;
+            for (int d = 0; d < dashes; d += 2) {
+              final Offset start = Offset.lerp(p1.offset, p2.offset, d / dashes)!;
+              final Offset end = Offset.lerp(p1.offset, p2.offset, (d + 1) / dashes)!;
+              canvas.drawLine(start, end, _linkPaint);
+            }
+          } else {
+            linkGlowPoints.add(p1.offset);
+            linkGlowPoints.add(p2.offset);
+            
+            linkPoints.add(p1.offset);
+            linkPoints.add(p2.offset);
 
-          final double packetT = (i * 0.25) % 1.0;
-          final Offset packetOffset = Offset.lerp(p1.offset, p2.offset, packetT)!;
-          packetPoints.add(packetOffset);
+            final double packetT = (i * 0.25) % 1.0;
+            final Offset packetOffset = Offset.lerp(p1.offset, p2.offset, packetT)!;
+            packetPoints.add(packetOffset);
+          }
         }
       }
 

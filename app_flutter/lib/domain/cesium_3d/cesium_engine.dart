@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
@@ -16,6 +17,15 @@ class CesiumEngine {
   double? _lastLatitude;
   double? _lastLongitude;
   double? _lastAltitude;
+
+  @visibleForTesting
+  DateTime? get lastUpdateTime => _lastUpdateTime;
+  @visibleForTesting
+  double? get lastLatitude => _lastLatitude;
+  @visibleForTesting
+  double? get lastLongitude => _lastLongitude;
+  @visibleForTesting
+  double? get lastAltitude => _lastAltitude;
 
   CesiumEngine._(this._bindings, this._handle);
 
@@ -38,9 +48,27 @@ class CesiumEngine {
 
   static final Map<String, void Function(Uint8List data)> _pendingTileCallbacks = {};
 
+  static final StreamController<CesiumError> _errorStreamController =
+      StreamController<CesiumError>.broadcast();
+
+  /// A broadcast stream that emits native FFI errors.
+  static Stream<CesiumError> get errorStream => _errorStreamController.stream;
+
+  static String? _lastNativeError;
+  static int? _lastNativeErrorCode;
+
+  /// Gets the message of the last native error.
+  static String? get lastNativeError => _lastNativeError;
+
+  /// Gets the error code of the last native error.
+  static int? get lastNativeErrorCode => _lastNativeErrorCode;
+
   static void _onNativeError(int errorCode, Pointer<Utf8> message, Pointer<Void> userData) {
     final msg = message.toDartString();
     print('Native Error ($errorCode): $msg');
+    _lastNativeError = msg;
+    _lastNativeErrorCode = errorCode;
+    _errorStreamController.add(CesiumError(errorCode, msg));
   }
 
   static void _onTileReady(Pointer<Utf8> tileIdPtr, Pointer<Uint8> dataPtr, int size, Pointer<Void> userData) {
@@ -62,6 +90,8 @@ class CesiumEngine {
     int maxSimultaneousTileLoads = 20,
     int maxCachedBytes = 256 * 1024 * 1024,
   }) async {
+    _lastNativeError = null;
+    _lastNativeErrorCode = null;
     _instance?.dispose();
 
     final bindings = CesiumNativeBindings.load();
@@ -255,6 +285,8 @@ class CesiumEngine {
   /// Disposes of the engine, shutting down the native Cesium systems and closing
   /// active FFI callbacks.
   void dispose() {
+    _lastNativeError = null;
+    _lastNativeErrorCode = null;
     _bindings.shutdown(_handle);
     _errorCallable?.close();
     _errorCallable = null;

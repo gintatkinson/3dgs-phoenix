@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:app_flutter/core/app_config.dart';
+import 'package:app_flutter/domain/cesium_3d/native/error_handler.dart';
+import 'package:meta/meta.dart';
 
 /// The set of imagery tile providers whose URL patterns are known.
 ///
@@ -81,12 +84,19 @@ class TileCache {
 /// without touching the network.
 class TileFetcher {
   bool _enabled = AppConfig.mapImageryEnabled;
-
-  final HttpClient _client = HttpClient()
-    ..userAgent = 'PlatformConsole/1.0'
-    ..connectionTimeout = const Duration(seconds: 5);
-
+  final HttpClient _client;
   final TileCache _cache = TileCache();
+
+  /// A global base URL override that applies to all TileFetchers.
+  static String? globalBaseUrlOverride;
+
+  /// An instance-specific base URL override.
+  String? baseUrlOverride;
+
+  TileFetcher({Duration connectionTimeout = const Duration(seconds: 5)})
+      : _client = HttpClient()
+          ..userAgent = 'PlatformConsole/1.0'
+          ..connectionTimeout = connectionTimeout;
 
   /// Whether the fetcher is permitted to make outbound HTTP requests.
   bool isEnabled() => _enabled;
@@ -152,7 +162,15 @@ class TileFetcher {
     if (cached != null) return cached;
 
     try {
-      final uri = Uri.parse(_urlFor(provider, z, x, y));
+      final String urlString;
+      if (globalBaseUrlOverride != null) {
+        urlString = '$globalBaseUrlOverride/$z/$x/$y.png';
+      } else if (baseUrlOverride != null) {
+        urlString = '$baseUrlOverride/$z/$x/$y.png';
+      } else {
+        urlString = _urlFor(provider, z, x, y);
+      }
+      final uri = Uri.parse(urlString);
       final request = await _client.getUrl(uri);
       final response = await request.close();
       if (response.statusCode == 200) {
@@ -163,8 +181,11 @@ class TileFetcher {
         return data;
       }
       await response.drain();
-    } catch (_) {
-      // Swallow — return null on any failure.
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        throw TileTimeoutException('Tile fetch timed out: $e');
+      }
+      // Swallow other errors - return null
     }
     return null;
   }

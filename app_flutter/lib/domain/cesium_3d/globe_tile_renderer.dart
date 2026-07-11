@@ -272,6 +272,8 @@ class GlobeTileRenderer {
         }
         onTileLoaded?.call();
       }
+    } catch (e) {
+      print('Failed to fetch/decode tile ${tile.key}: $e');
     } finally {
       _pendingFetches.remove(tile.key);
       _activeFetchCount--;

@@ -53,6 +53,9 @@ Under this architecture, the headless Unreal Engine process renders 3D graphics 
 - [ ] [#252 - Feature 2.2: Windows DXGI Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-04-windows-dxgi-interop.md) (Maps Unreal DX12/Vulkan texture exports to kFlutterDesktopGpuSurfaceTypeDxgiSharedHandle)
 - [ ] [#253 - Feature 2.3: macOS IOSurface Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-05-macos-iosurface-interop.md) (Integrates IOSurfaceRef with MTLStorageModeShared backing CVPixelBuffer on Apple Silicon)
 - [ ] [#254 - Feature 2.4: Linux Vulkan Interop](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-06-linux-vulkan-interop.md) (Exposes Vulkan textures using VK_KHR_external_memory_fd and sends FDs over UDS)
+- [ ] [#255 - Feature 19: GPU Texture Atlas Cache Manager](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-19-gpu-texture-atlas.md) (Manages a grid of texture slots via an LRU cache, allocates slots, disposes evicted textures, and clears VRAM under capacity thresholds)
+- [ ] [#257 - Feature 21: Binary glTF (GLB) Parser](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-21-binary-gltf-parser.md) (Decodes GLB byte blocks, verifies Magic/Version headers, performs alignment copying, bounds offsets, and executes off-thread isolate parsing)
+- [ ] [#259 - Feature 23: Thread-Safe Native FFI Bridge](https://github.com/gintatkinson/3dgs-phoenix/blob/main/docs/features/feat-23-thread-safe-ffi-bridge.md) (Maps camera updates to FFI, throttles frequent updates (<100ms or <10m), wraps error/tile callbacks thread-safely via NativeCallable.listener, and closes all handles)
 
 ### Associated Use Cases & User Stories
 
