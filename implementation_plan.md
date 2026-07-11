@@ -148,7 +148,9 @@ where $\epsilon = \frac{0.5}{\text{AtlasWidth}}$.
 ### 3.2 Micro-Task TDD Execution Breakdown (Phase 5)
 
 #### Micro-Task 5.1: GlobePainter Height Displacement
-*   **Target File:** `app_flutter/lib/domain/cesium_3d/renderers/globe_renderer.dart`
+*   **Target Files:**
+    *   `app_flutter/lib/domain/cesium_3d/renderers/globe_renderer.dart`
+    *   `app_flutter/lib/domain/cesium_3d/tile_processor.dart` (Add getter `Map<String, TileGeometry> get cache => _cache;` or similar to expose cached tile geometries)
 *   **Objective:** Modify `GlobePainter` to deform the sphere geometry outward along normal vectors based on height values.
 *   **RED Test (Failing Test):** Create `test/cesium_3d/globe_deformation_test.dart`. Write test `displacesVerticesAlongGeodeticNormals` asserting that a vertex at unit vector $(1, 0, 0)$ with a height of $1000\text{m}$ projects to $(R_{earth} + 1000, 0, 0)$. Write test `clampsInvalidHeightToZero` to ensure `NaN`, `Infinity`, or out-of-bounds heights cause $0\text{m}$ displacement.
 *   **GREEN Implementation:**

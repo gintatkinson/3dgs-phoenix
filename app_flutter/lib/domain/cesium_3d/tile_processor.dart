@@ -29,6 +29,9 @@ class TileGeometry {
 class TileGeometryCache {
   final Map<String, TileGeometry> _cache = {};
 
+  /// Exposes the underlying cache map.
+  Map<String, TileGeometry> get cache => _cache;
+
   /// Caches the geometry of a parsed tile under the given [tileId].
   void put(String tileId, TileGeometry geometry) {
     _cache[tileId] = geometry;
